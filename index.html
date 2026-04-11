@@ -1750,7 +1750,8 @@ function doLogin(){
   var err=document.getElementById('lerr');
   err.style.display='none';
   if(!sel){err.textContent='Please select a user.';err.style.display='block';return;}
-  if(!pw||!USERS[sel]||pw!==USERS[sel].pw){err.textContent='Incorrect password. Format: TF + initials + 2026 (e.g. TFAK2026)';err.style.display='block';return;}
+  pw=pw.trim();
+  if(!pw||!USERS[sel]||pw!==USERS[sel].pw){err.textContent='Incorrect password. Try: TFAK2026 / TFAS2026 / TFRK2026';err.style.display='block';return;}
   CU=USERS[sel];
   document.getElementById('ls').classList.add('gone');
   document.getElementById('app').classList.add('on');
@@ -1807,10 +1808,13 @@ function camTab(el,id){
 
 // Revenue savings slider
 function calcSavings(){
-  var pct=parseInt(document.getElementById('slider-pct').value)/100;
-  var margin=parseInt(document.getElementById('slider-margin').value)/100;
-  document.getElementById('slider-disp').textContent=Math.round(pct*100)+'%';
-  document.getElementById('slider-margin-disp').textContent=Math.round(margin*100)+'%';
+  var sp=document.getElementById('slider-pct');
+  var sm=document.getElementById('slider-margin');
+  if(!sp||!sm)return;
+  var pct=parseInt(sp.value)/100;
+  var margin=parseInt(sm.value)/100;
+  var sd=document.getElementById('slider-disp');if(sd)sd.textContent=Math.round(pct*100)+'%';
+  var smd=document.getElementById('slider-margin-disp');if(smd)smd.textContent=Math.round(margin*100)+'%';
   var totalRev=0,totalBk=0;
   SLIDER_DATA.forEach(function(h){
     var apiRev=h.rev*(1-h.direct_pct/100);
@@ -1818,9 +1822,9 @@ function calcSavings(){
     totalRev+=shifted*margin;
     totalBk+=h.bookings*(1-h.direct_pct/100)*pct;
   });
-  document.getElementById('sav-rev').textContent='$'+Math.round(totalRev/1000)+'K';
-  document.getElementById('sav-margin').textContent='$'+Math.round(totalRev/1000*0.3)+'K';
-  document.getElementById('sav-bookings').textContent=Math.round(totalBk).toLocaleString();
+  (document.getElementById('sav-rev')||{textContent:''}).textContent='$'+Math.round(totalRev/1000)+'K';
+  (document.getElementById('sav-margin')||{textContent:''}).textContent='$'+Math.round(totalRev/1000*0.3)+'K';
+  (document.getElementById('sav-bookings')||{textContent:''}).textContent=Math.round(totalBk).toLocaleString();
 }
 
 // Filters
@@ -2080,12 +2084,12 @@ var HP_TOTALS = {"tgt_hotels":500,"tgt_nights":182485,"tgt_rev":18424253.0,"fwd_
 function calcADR(){
   var el=document.getElementById('adr-slider');
   var reduction=el?parseInt(el.value):0;
-  var d=document.getElementById('adr-disp');
+  var d=(document.getElementById('adr-disp')||{textContent:''});
   if(d)d.textContent='$'+reduction+' reduction';
   var impact=reduction*HP_TOTALS.tgt_nights;
   var newRev=HP_TOTALS.tgt_rev-impact;
-  var impEl=document.getElementById('adr-impact');
-  var revEl=document.getElementById('adr-new-rev');
+  var impEl=(document.getElementById('adr-impact')||{textContent:''});
+  var revEl=(document.getElementById('adr-new-rev')||{textContent:''});
   if(impEl)impEl.textContent=reduction===0?'$0':'-$'+Math.round(impact/1000)+'K';
   if(revEl)revEl.textContent='$'+Math.round(newRev/1e6*10)/10+'M';
   renderTgtTable();
