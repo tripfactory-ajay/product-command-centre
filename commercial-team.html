@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New Commercial Team — TripFactory</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F2F5;color:#1a2332;display:flex;flex-direction:column}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#0D1B2A,#1A3050);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #C8102E;flex-shrink:0}
+.hdr h1{font-size:15px;font-weight:700;color:#fff}
+.hdr h1 em{color:#C9A84C;font-style:normal}
+.hdr p{font-size:10px;color:#8fa8c0;margin-top:1px}
+.badge{background:#C8102E;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+#save-btn{background:#C9A84C;color:#0D1B2A;border:none;padding:4px 11px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer}
+
+/* BAR */
+.bar{background:#fff;border-bottom:1px solid #dde3ec;padding:5px 14px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex-shrink:0}
+.bar label{font-size:9px;font-weight:700;color:#7a8ba0;text-transform:uppercase;letter-spacing:.4px}
+.fsel{padding:3px 7px;border:1px solid #c5cdd9;border-radius:5px;font-size:10px;color:#374151;background:#f9fafb;cursor:pointer;outline:none}
+#clear-btn{margin-left:auto;padding:3px 9px;border:1px solid #fca5a5;background:#fff5f5;color:#C8102E;border-radius:5px;font-size:9px;font-weight:600;cursor:pointer}
+#role-count{font-size:9px;color:#7a8ba0}
+.vbtn{padding:3px 9px;border:1px solid #c5cdd9;border-radius:5px;font-size:10px;background:#fff;cursor:pointer;color:#374151}
+.vbtn.on{background:#0D1B2A;color:#fff;border-color:#0D1B2A;font-weight:600}
+
+/* CANVAS — fills remaining height, scrolls vertically only */
+.canvas{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 8px 40px;display:flex;justify-content:center}
+
+/* SCALE WRAPPER */
+.scale-wrap{transform-origin:top center;transition:transform .2s}
+
+/* ORG */
+.org{display:flex;flex-direction:column;align-items:center;gap:0}
+.vline{width:2px;height:14px;background:#c5cdd9;margin:0 auto;flex-shrink:0}
+
+/* CARDS — base 130px */
+:root{--cw:130px;--gap:8px;--fs:9px;--fsub:8px}
+.card{width:var(--cw);background:#fff;border-radius:7px;border:2px solid #dde3ec;box-shadow:0 1px 5px rgba(0,0,0,.07);flex-shrink:0;transition:.15s}
+.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.13);transform:translateY(-1px)}
+
+/* card type colours */
+.t-cpso{border-color:#C9A84C!important;background:linear-gradient(160deg,#fffbee,#fff)!important}
+.t-dir {border-color:#0D1B2A!important}
+.t-mice{border-color:#C8102E!important}
+.t-pm  {border-color:#0A7E8C!important}
+.t-con {border-color:#0B6E4F!important}
+.t-conn{border-color:#1E40AF!important}
+.t-sup {border-color:#F59E0B!important;background:#fffbf0!important}
+
+.card-hd{padding:5px 7px 3px;display:flex;align-items:flex-start;justify-content:space-between;gap:3px}
+.ctitle{font-size:var(--fs);font-weight:700;text-transform:uppercase;letter-spacing:.25px;line-height:1.3;flex:1}
+.t-cpso .ctitle{color:#92700A}
+.t-dir  .ctitle{color:#0D1B2A}
+.t-mice .ctitle{color:#991B1B}
+.t-pm   .ctitle{color:#0A7E8C}
+.t-con  .ctitle{color:#0B6E4F}
+.t-conn .ctitle{color:#1E40AF}
+.t-sup  .ctitle{color:#D97706}
+.csub{font-size:7px;color:#9ca3af;margin-top:1px;line-height:1.3}
+
+/* JD */
+.jd-wrap{position:relative;flex-shrink:0}
+.jd-btn{width:13px;height:13px;border-radius:50%;background:#0D1B2A;color:#fff;font-size:8px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.jd-tip{display:none;position:absolute;top:16px;right:0;width:210px;background:#0D1B2A;color:#d1dce8;font-size:9.5px;line-height:1.55;padding:7px 9px;border-radius:7px;box-shadow:0 8px 28px rgba(0,0,0,.45);z-index:500;white-space:normal}
+.jd-tip b{color:#C9A84C;display:block;margin-bottom:2px}
+.jd-tip li{margin-left:10px;margin-bottom:1px}
+.jd-wrap:hover .jd-tip{display:block}
+
+/* SLOTS */
+.slots{padding:3px 5px 5px;display:flex;flex-direction:column;gap:2px}
+.slot{border:1.5px dashed #c5cdd9;border-radius:4px;min-height:26px;display:flex;align-items:center;padding:2px 5px;gap:3px;cursor:pointer;transition:.1s;background:#fafbfc}
+.slot:hover:not(.filled){border-color:#0A7E8C;background:#f0fbfc}
+.slot.filled{border-style:solid;border-color:#e5e7eb;background:#fff;cursor:default}
+.snum{font-size:8px;color:#9ca3af;min-width:9px;flex-shrink:0}
+.sinfo{flex:1;min-width:0}
+.sname{font-size:9px;font-weight:600;color:#1a2332;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stitle{font-size:7px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sempty{font-size:8px;color:#c5cdd9;font-style:italic}
+.sx{margin-left:auto;width:11px;height:11px;border-radius:50%;background:#fee2e2;border:none;color:#C8102E;font-size:8px;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+.slot.filled:hover .sx{display:flex}
+.addslot{height:18px;border:1.5px dashed #e5e7eb;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:8px;color:#c5cdd9;transition:.1s}
+.addslot:hover{border-color:#0A7E8C;color:#0A7E8C;background:#f0fbfc}
+
+/* CONNECTOR BARS */
+.hbar{position:relative;flex-shrink:0}
+
+/* SUPPORT BAND */
+.sup-row{display:flex;gap:var(--gap);justify-content:center;margin-top:4px}
+.sup-card{background:#fffbf0;border:2px solid #F59E0B;border-radius:7px;padding:5px 8px;flex:1;max-width:200px;cursor:pointer;transition:.15s;text-align:center}
+.sup-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.1);transform:translateY(-1px)}
+.sup-card .sl{font-size:9px;font-weight:700;color:#D97706;text-transform:uppercase;letter-spacing:.3px}
+.sup-card .sc{font-size:11px;font-weight:800;color:#0D1B2A;margin:1px 0}
+.sup-card .ss{font-size:7.5px;color:#9ca3af}
+.sup-filled{font-size:7.5px;color:#0A7E8C;margin-top:2px}
+
+/* SECTION LABELS */
+.sec-row{display:flex;gap:var(--gap);justify-content:center;margin-bottom:4px}
+.sec-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:1px 8px;border-radius:20px;text-align:center}
+
+/* TIER ROWS */
+.tier-row{display:flex;gap:var(--gap);justify-content:center;align-items:flex-start}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(13,27,42,.5);z-index:999;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;width:400px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.mhd{padding:11px 13px 7px;border-bottom:1px solid #dde3ec}
+.mhd h3{font-size:12px;font-weight:700;color:#0D1B2A}
+.mhd p{font-size:9.5px;color:#7a8ba0;margin-top:1px}
+.mfilt{padding:6px 10px 5px;border-bottom:1px solid #dde3ec;display:flex;flex-direction:column;gap:4px}
+.mrow{display:flex;gap:4px}
+.msearch{flex:2;padding:5px 8px;border:1px solid #c5cdd9;border-radius:6px;font-size:11px;outline:none}
+.msearch:focus{border-color:#0A7E8C}
+.msel{flex:1;padding:5px;border:1px solid #c5cdd9;border-radius:6px;font-size:10px;color:#374151;background:#f9fafb;outline:none}
+.mlist{overflow-y:auto;flex:1;padding:4px 8px}
+.mitem{padding:5px 6px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.1s}
+.mitem:hover{background:#f0fbfc}
+.mav{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
+.aL{background:#0D1B2A}.aP{background:#0A7E8C}.aS{background:#1E40AF}.aO{background:#065F46}
+.aT{background:#5B21B6}.aF{background:#92400E}.aH{background:#7C3AED}.aX{background:#4A5568}
+.mname{font-size:11px;font-weight:600;color:#1a2332}
+.msub2{font-size:9px;color:#9ca3af}
+.mcount{font-size:10px;color:#9ca3af;padding:4px 10px;text-align:center}
+.mft{padding:8px 12px;border-top:1px solid #dde3ec;display:flex;justify-content:flex-end}
+.mcx{padding:4px 12px;border:1px solid #c5cdd9;background:#fff;border-radius:6px;font-size:11px;cursor:pointer}
+
+/* SUMMARY */
+#summary-view{display:none;max-width:880px;width:100%;padding:12px}
+.ssec{background:#fff;border-radius:8px;border:1px solid #dde3ec;margin-bottom:9px;overflow:hidden}
+.sshd{padding:6px 11px;font-size:10px;font-weight:700;color:#fff}
+.ssrow{display:flex;align-items:center;padding:5px 11px;border-bottom:1px solid #f0f2f5;gap:8px}
+.ssrow:last-child{border-bottom:none}
+.ssrole{font-size:9.5px;color:#7a8ba0;width:190px;flex-shrink:0}
+.ssname{font-size:11px;font-weight:600}
+.ssempty{font-size:9.5px;color:#c5cdd9;font-style:italic}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+#orn-nav{display:none;position:fixed;top:0;left:0;right:0;z-index:99999;
+  background:#000;height:44px;align-items:center;padding:0 18px;gap:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.77rem}
+#orn-nav.show{display:flex}
+#orn-nav a{color:rgba(255,255,255,.65);text-decoration:none;font-weight:600;
+  transition:.2s;white-space:nowrap}
+#orn-nav a:hover{color:#fff}
+.orn-sep{width:1px;height:18px;background:rgba(255,255,255,.15);flex-shrink:0}
+.orn-spacer{flex:1}
+.orn-user{color:rgba(255,255,255,.4);font-size:.72rem}
+.orn-signout{color:rgba(255,255,255,.5);text-decoration:none;font-size:.71rem;
+  border:1px solid rgba(255,255,255,.2);padding:3px 9px;border-radius:6px;
+  transition:.2s;cursor:pointer}
+.orn-signout:hover{color:#fff;border-color:rgba(255,255,255,.5)}
+.orn-spacer-top{height:44px}
+</style>
+</head>
+<body>
+<div id="orn-nav">
+  <a href="https://tripfactory-ajay.github.io/product-command-centre/index.html">← Hub</a>
+  <div class="orn-sep"></div>
+  <span id="orn-page-name" style="color:rgba(255,255,255,.35);font-size:.71rem;text-transform:uppercase;letter-spacing:.5px"></span>
+  <div class="orn-spacer"></div>
+  <span class="orn-user" id="orn-user-name"></span>
+  <div class="orn-sep"></div>
+  <a class="orn-signout" href="https://tripfactory-ajay.github.io/product-command-centre/index.html" onclick="try{localStorage.removeItem('orn_hub_session')}catch(e){}">Sign Out</a>
+</div>
+<div class="orn-spacer-top"></div>
+<script>
+(function(){
+  var SK='orn_hub_session', GH='https://tripfactory-ajay.github.io/product-command-centre';
+  try{
+    var s=JSON.parse(localStorage.getItem(SK)||'null');
+    if(!s||!s.name||(Date.now()-s.ts)>8*60*60*1000){
+      localStorage.removeItem(SK);
+      window.location.href=GH+'/index.html';
+      return;
+    }
+    s.ts=Date.now();
+    localStorage.setItem(SK,JSON.stringify(s));
+    var nav=document.getElementById('orn-nav');
+    if(nav)nav.classList.add('show');
+    var un=document.getElementById('orn-user-name');
+    if(un)un.textContent=s.name;
+    // Set page name from document title
+    var pn=document.getElementById('orn-page-name');
+    if(pn)pn.textContent=document.title||'Tool';
+  }catch(e){
+    window.location.href=GH+'/index.html';
+  }
+})();
+</script>
+
+<div class="hdr">
+  <div>
+    <h1>TripFactory ORN &nbsp;&middot;&nbsp; <em>New Commercial Team</em></h1>
+    <p>Click to assign &nbsp;&middot;&nbsp; Hover <strong style="color:#C9A84C">i</strong> for job description</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="fill-count" style="font-size:9.5px;color:#8fa8c0"></span>
+    <button id="save-btn" onclick="saveAlloc()">&#128190; Save</button>
+    <span class="badge">COMMERCIAL</span>
+  </div>
+</div>
+
+<div class="bar">
+  <label>View:</label>
+  <button class="vbtn on" id="btn-tree" onclick="setView('tree')">&#127795; Org</button>
+  <button class="vbtn" id="btn-sum"  onclick="setView('summary')">&#128203; List</button>
+  <span style="width:1px;height:14px;background:#dde3ec;display:inline-block;margin:0 2px"></span>
+  <label>Dept:</label>
+  <select class="fsel" id="tb-dept">
+    <option value="">All</option>
+    <option value="Leadership">Leadership</option>
+    <option value="Product">Product</option>
+    <option value="Sales">Sales</option>
+    <option value="Operations">Operations</option>
+    <option value="Technology">Technology</option>
+    <option value="Finance">Finance</option>
+    <option value="HR &amp; Admin">HR &amp; Admin</option>
+  </select>
+  <button id="clear-btn" onclick="clearAll()">&#10005; Clear</button>
+  <span id="role-count"></span>
+</div>
+
+<div class="canvas" id="canvas">
+  <div class="scale-wrap" id="scale-wrap">
+    <div id="tree-view" class="org"></div>
+    <div id="summary-view"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="mhd">
+      <h3 id="m-title">Select Person</h3>
+      <p id="m-sub">Choose from company staff</p>
+    </div>
+    <div class="mfilt">
+      <div class="mrow">
+        <input class="msearch" id="m-q" placeholder="Search name, title, location..." oninput="mSearch()">
+        <select class="msel" id="m-dept" onchange="mSearch()">
+          <option value="">All Depts</option>
+          <option value="Leadership">Leadership</option>
+          <option value="Product">Product</option>
+          <option value="Sales">Sales</option>
+          <option value="Operations">Operations</option>
+          <option value="Technology">Technology</option>
+          <option value="Finance">Finance</option>
+          <option value="HR &amp; Admin">HR &amp; Admin</option>
+        </select>
+      </div>
+      <div class="mrow">
+        <select class="msel" id="m-loc" onchange="mSearch()">
+          <option value="">All Locations</option>
+          <option>Bengaluru</option><option>Gurgaon</option><option>Mumbai</option>
+          <option>Noida</option><option>Delhi</option><option>Siliguri</option><option>Hyderabad</option>
+        </select>
+      </div>
+    </div>
+    <div class="mlist" id="m-list"></div>
+    <div class="mcount" id="m-count"></div>
+    <div class="mft"><button class="mcx" onclick="closeModal()">Cancel</button></div>
+  </div>
+</div>
+
+<script>
+const STAFF = [{"n":"Bhagya Jyothi B","t":"Assistant Manager - Sales","d":"Sales","l":"Bengaluru","e":"bhagyajyothi.b@tripfactory.com"},{"n":"Kamini Sharma","t":"Assistant Manager - Sales","d":"Sales","l":"Bengaluru","e":"kamini.sharma@tripfactory.com"},{"n":"Neda Sadaf Tajuddin","t":"Senior Manager- B2B Business Performance","d":"Sales","l":"Bengaluru","e":"neda@tripfactory.com"},{"n":"Ambuja Reddy","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"ambuja@tripfactory.travel"},{"n":"Yashaswini A","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Sangita Roy","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"sangita.r@nexusdmc.travel"},{"n":"Soheb Makandar","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"soheb.s@tripfactory.travel"},{"n":"Benaka K","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"benaka.k@nexusdmc.travel"},{"n":"Manisha Anilkumar Badkar","t":"Relationship Manager","d":"Sales","l":"Bengaluru","e":""},{"n":"Prakash M","t":"Assistant Manager - Sales","d":"Sales","l":"Bengaluru","e":"prakash.m@tripfactory.com"},{"n":"Pulkit Gupta","t":"Assistant Manager - Sales","d":"Sales","l":"Gurgaon","e":"pulkit.gupta@tripfactory.com"},{"n":"Martina Vasan","t":"Senior Manager- B2C Business Performance","d":"Sales","l":"Bengaluru","e":"martina.v@tripfactory.com"},{"n":"Aliya Banu N","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"banu.n@tripfactory.travel"},{"n":"Solomon Nikhil D","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"nikhil.sd@tripfactory.travel"},{"n":"Tejas C","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Ranjan Gowda R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"ranjan.gr@tripfactory.travel"},{"n":"Sangita Rai","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"sangita.rai@tripfactory.travel"},{"n":"Kriti Rai","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"kriti.rai@tripfactory.travel"},{"n":"Sanket De","t":"Team Lead - Sales","d":"Sales","l":"Siliguri","e":"sanket.dey@tripfactory.com"},{"n":"Ankur Dwivedi","t":"Sr. Destination Expert","d":"Sales","l":"Gurgaon","e":"ankur.dwivedi@tripfactory.travel"},{"n":"Periyaraj Ravichandran","t":"Team Lead - Sales","d":"Sales","l":"Bengaluru","e":"periyaraj@tripfactory.com"},{"n":"Sneha Pradhan","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"sneha.p@tripfactory.travel"},{"n":"Sahil Pradhan","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"sahil.pradhan@tripfactory.travel"},{"n":"Nalendu Roy","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"nalendu@tripfactory.travel"},{"n":"Ananya S Gowda","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"ananya.s@nexusdmc.travel"},{"n":"Prabin Nowbagh","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"prabin.n@tripfactory.travel"},{"n":"Deepthi G C","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"deepthi.gc@tripfactory.travel"},{"n":"Arpitha V","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"arpitha.v@tripfactory.travel"},{"n":"Harismitha B M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"harismitha.bm@nexusdmc.travel"},{"n":"Brijesh Krishna M N","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"brijesh.mn@tripfactory.travel"},{"n":"Adrian J Milton","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"adrian.mj@tripfactory.travel"},{"n":"Mohammed Daaniyal","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"daaniyal.m@tripfactory.travel"},{"n":"Sanchaita Dutta Chowdhury","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"sanchaita.dc@tripfactory.travel"},{"n":"Reena P","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"reena.p@tripfactory.travel"},{"n":"Spoorthi P K","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"spoorthi.pk@tripfactory.travel"},{"n":"Mohana M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"m.mohana@tripfactory.travel"},{"n":"Prakash B","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"prakash.b@tripfactory.travel"},{"n":"Sanjana M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"sanjana.m@tripfactory.travel"},{"n":"Subramaya M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Sudipta Mondal","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"sudipta.m@tripfactory.travel"},{"n":"Vishnu Priya J","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"vishnu.p@tripfactory.travel"},{"n":"Shaistha N","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"shaistha@tripfactory.travel"},{"n":"Vijrambha Gowda","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Rajini A R","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"rajini.ar@tripfactory.travel"},{"n":"Raina Hussain","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"raina.h@tripfactory.travel"},{"n":"Amra Jabeen","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"amra.j@tripfactory.travel"},{"n":"Gudla Aryan Rajesh","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Janavi G","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"janavi.g@tripfactory.travel"},{"n":"Sanjana S","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Jyothi S Vara","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"jyothi.sv@tripfactory.travel"},{"n":"Janani SB","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"janani.sb@tripfactory.travel"},{"n":"Dhaiwik R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"dhaiwik.r@tripfactory.travel"},{"n":"Saran S","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"saran.s@tripfactory.travel"},{"n":"Sree Parvathi R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"parvathi.sr@tripfactory.travel"},{"n":"Nisarga C R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"nisarga.cr@tripfactory.travel"},{"n":"Spandana L","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Sphurti S Ankali","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":""},{"n":"Manasa M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"manasa.m@tripfactory.travel"},{"n":"Glen Somanna A","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"glen.sa@tripfactory.travel"},{"n":"Mamtha Patel Norat Ram","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"mamtha.p@tripfactory.travel"},{"n":"Harshitha B","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"harshitha.b@tripfactory.travel"},{"n":"Vijaya Lakshmi karanth","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"vijayalakshmi.k@tripfactory.travel"},{"n":"Parthib Kumar Barman","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"parthib.kb@tripfactory.travel"},{"n":"Ria Dhar","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"ria.d@tripfactory.travel"},{"n":"Bishal Sarkar","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"bishal.s@tripfactory.travel"},{"n":"Simran Thapa","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Tomali Purkayastha","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"tomali.p@tripfactory.travel"},{"n":"Priyanki Roy","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"priyanki.roy@tripfactory.travel"},{"n":"Anjali Prasad","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"anjali.p@tripfactory.travel"},{"n":"Sandhya Kumari","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"sandhya.k@tripfactory.travel"},{"n":"Swastika Rai","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"swastika.r@nexusdmc.travel"},{"n":"Sangdup Tamang","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Diya Dechamma K B","t":"FCD Executive","d":"Sales","l":"Bengaluru","e":"diya.kb@tripfactory.travel"},{"n":"Komala H","t":"FCD Executive","d":"Sales","l":"Bengaluru","e":"komala.h@tripfactory.travel"},{"n":"Subarna Shaw","t":"Team Lead - Sales","d":"Sales","l":"Kolkata","e":""},{"n":"Sania Jakki","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Nikita Ekka","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Rajdeep Sarkar","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"rajdeep.s@tripfactory.travel"},{"n":"Susmita Roy","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Surabhi Pradhan","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"surabhi.pradhan@nexusdmc.travel"},{"n":"Ayush Rai","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"ayush.rai@tripfactory.travel"},{"n":"Shristi Gurung","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Pradumna Rai","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Kaurag Bhattacharjee","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Shayani Dutta","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Nikita Tamang","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Anushri Tamang","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Megha Nandita Sah","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Shrestha Nandy","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Muskaan Khawas","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Nisith Chakraborty","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Asmita Sarkar","t":"Destination Expert","d":"Sales","l":"Siliguri","e":""},{"n":"Manideep Koduri","t":"Key Account Manager","d":"Sales","l":"Bengaluru","e":"manideep.k@tripfactory.travel"},{"n":"Kiran Kumar A C","t":"Key Account Manager","d":"Sales","l":"Bengaluru","e":"kiran.ac@nexusdmc.com"},{"n":"Mohith K V","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"mohith.kv@nexusdmc.travel"},{"n":"Thanushree A","t":"FCD Executive","d":"Sales","l":"Bengaluru","e":"thanushree.a@nexusdmc.travel"},{"n":"Kartikay Yagyik","t":"Quality Control - Manager","d":"Sales","l":"Gurgaon","e":"kartikay.yagyik@tripfactory.com"},{"n":"Sumit Jha","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"sumit.j@tripfactory.travel"},{"n":"Bindu Shree R","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"bindu.sr@tripfactory.travel"},{"n":"Aniket Gahinath Avhad","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"aniket.a@tripfactory.travel"},{"n":"Chandana D","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"chandana.d@tripfactory.travel"},{"n":"Rakshitha J","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Ruchitha N","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"ruchitha.n@tripfactory.travel"},{"n":"Srotha Biswal Biswal","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Sandesh Shastry","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Vishwas S","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"vishwas.s@tripfactory.travel"},{"n":"Deepthi C R","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"deepthi.cr@tripfactory.travel"},{"n":"Naveenya V","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Chirag V","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"chirag.v@tripfactory.travel"},{"n":"Kruthika T D","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"kruthika.td@tripfactory.travel"},{"n":"Sri Vidhya M S","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Sharanya M V","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Shrinithin F X","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"shrinithin.fx@tripfactory.travel"},{"n":"Vidya Ramananda Bhat","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"vidhya.rb@tripfactory.travel"},{"n":"Abhay kiran v","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"abhay.kv@tripfactory.travel"},{"n":"Sanjana K","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"sanjana.k@tripfactory.travel"},{"n":"Sanjana Hariprasad","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"sanjana.h@tripfactory.travel"},{"n":"Radha Y","t":"Destination  Expert","d":"Sales","l":"Bengaluru","e":"radha.y@tripfactory.travel"},{"n":"Fouziya Sultana","t":"Assistant Manager","d":"Sales","l":"Bengaluru","e":"fouzia@tripfactory.com"},{"n":"Rashmi A","t":"Assistant Manager","d":"Sales","l":"Bengaluru","e":"rashmi.a@tripfactory.com"},{"n":"Nishanth D Shekar","t":"Assistant Manager","d":"Sales","l":"Bengaluru","e":"nishanth.d@tripfactory.com"},{"n":"Deepak Kumar Singh","t":"Assistant Manager","d":"Sales","l":"Bengaluru","e":"deepak.kumar@tripfactory.com"},{"n":"Sonu Kumar B","t":"Assistant Manager","d":"Sales","l":"Bengaluru","e":"sonu.k@tripfactory.com"},{"n":"Vivek Gurjar","t":"Assistant Manager","d":"Sales","l":"Gurgaon","e":"vivek.g@nexusdmc.com"},{"n":"J Priscilla John","t":"Business Development Manager","d":"Sales","l":"Bengaluru","e":"priscilla@tripfactory.com"},{"n":"Mala Kondamma","t":"Business Development Manager","d":"Sales","l":"Bengaluru","e":"mala.k@tripfactory.com"},{"n":"Ankita Chakraborty","t":"Team Lead","d":"Sales","l":"Siliguri","e":"ankita.c@tripfactory.com"},{"n":"Chethan G K","t":"Process Manager","d":"Sales","l":"Bengaluru","e":""},{"n":"Babitha G","t":"Quality Analyst","d":"Sales","l":"Bengaluru","e":"babitha.g@tripfactory.com"},{"n":"Bharat Bhushan Gulati","t":"Sales and Operations Manager - OCEANIA","d":"Sales","l":"Gurgaon","e":"bharat.g@tripfactory.com"},{"n":"Himanshu Kumar","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"himanshu.k@nexusdmc.travel"},{"n":"Raju Sarkar","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"raju.s@nexusdmc.travel"},{"n":"Manoj kumar sankar","t":"Process Manager","d":"Sales","l":"Bengaluru","e":""},{"n":"Ashutosh Shukla","t":"Business Development Manager","d":"Sales","l":"Gurgaon","e":"ashutosh.s@tripfactory.com"},{"n":"Reeba Rehan","t":"Key Account Manager","d":"Sales","l":"Gurgaon","e":"reeba.r@tripfactory.com"},{"n":"Angad Shishodia","t":"Business Head","d":"Sales","l":"Gurgaon","e":"angad.s@tripfactory.com"},{"n":"Mohammed Sarosh","t":"Key Account Manager","d":"Sales","l":"Bengaluru","e":"sarosh@tripfactory.com"},{"n":"Ravinder Singh Lamba","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Lalit S Sabaji Sawant","t":"Team Lead","d":"Sales","l":"Mumbai","e":""},{"n":"Siddharth Pagar","t":"Tour Manager","d":"Sales","l":"Mumbai","e":"siddharth.pagar@tripfactory.travel"},{"n":"Siddharth Ramakant Bhoir","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Rohan Apke","t":"Tour Manager","d":"Sales","l":"Mumbai","e":"rohan.apke@tripfactory.travel"},{"n":"Shantanu Abhay Sukhathankar","t":"Business Development Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Satyendra jagdsih Shah","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Ganesh Sorte","t":"Tour Manager","d":"Sales","l":"Mumbai","e":"ganesh.sorte@tripfactory.travel"},{"n":"Jagdish prabhakar Kerkar","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Prasad Harishchandra Kawli","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Nirvan KAILASH Yelve","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Avinash Dattaram Ghatge","t":"Tour Manager","d":"Sales","l":"Mumbai","e":"avinash.dg@tripfactory.travel"},{"n":"Noopur Paresh Mehta","t":"Sr. Destination Expert","d":"Sales","l":"Mumbai","e":"noopur.mehta@tripfactory.travel"},{"n":"Minal Siddhesh Siddhesh Bhagat","t":"Sr. Destination Expert","d":"Sales","l":"Mumbai","e":""},{"n":"Bakhtiyar Maaz Ahmed","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Abhimanyu Yadav","t":"B2B Support Executive","d":"Sales","l":"Siliguri","e":"abhimanyuyadav821@gmail.com"},{"n":"Kuruva Rajendra","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"rajendra.k@nexusdmc.travel"},{"n":"Sohini Banerjee","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"sohini.b@nexusdmc.travel"},{"n":"Tasi Dukpa","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"tasi.d@tripfactory.travel"},{"n":"Kushal H M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"kushal.hm@nexusdmc.travel"},{"n":"Rakshith C R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"rakshith.cr@nexusdmc.travel"},{"n":"Shreyas G","t":"Field Sales Executive","d":"Sales","l":"Bengaluru","e":"shreyas.g@nexusdmc.travel"},{"n":"Sushmita Pradhan","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"sushmita.p@tripfactory.travel"},{"n":"Vinod More","t":"Destination Expert","d":"Sales","l":"Bhopal","e":"vinod.more@nexusdmc.travel"},{"n":"Ankit Makwana","t":"Sr. Destination Expert","d":"Sales","l":"Gurgaon","e":"ankit.makwana@tripfactory.travel"},{"n":"Anu Beohar","t":"Destination Expert","d":"Sales","l":"Jabalpur","e":"anu.beohar@nexusdmc.travel"},{"n":"Joseph A","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"joseph@nexusdmc.travel"},{"n":"Prema A","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"prema.a@nexusdmc.travel"},{"n":"Pratyush Anand","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"pratyush@tripfactory.com"},{"n":"Abdul Hameed A","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"abdul.hameed@nexusdmc.travel"},{"n":"Madhu Sudhan S","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"madhusudhan.s@tripfactory.com"},{"n":"Roshni Suri","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"roshni@nexusdmc.travel"},{"n":"Siji Sam","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"siji.sam@nexusdmc.travel"},{"n":"Sarita Devi","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"sarita.s@nexusdmc.travel"},{"n":"Devendla Babu","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Shimron Gershom","t":"Key Account Manager","d":"Sales","l":"Bengaluru","e":"shimron@nexusdmc.travel"},{"n":"Ayan Razvi","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"ayan.r@nexusdmc.travel"},{"n":"Sumila R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"sumila.r@nexusdmc.travel"},{"n":"Uday Manikanta M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"uday.mm@nexusdmc.travel"},{"n":"Lokesh C A","t":"Field Sales Executive","d":"Sales","l":"Bengaluru","e":"lokesh.ca@nexusdmc.travel"},{"n":"Arshdeep Kaur","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"arsh.k@nexusdmc.travel"},{"n":"Kirti Tanwar","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"kirti.t@nexusdmc.travel"},{"n":"Salman Khan","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"salman.k@nexusdmc.travel"},{"n":"Nikhil Kachhawa","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":""},{"n":"Deepak Kumar","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"deepakkumar@nexusdmc.travel"},{"n":"Nandhini J","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"nandhini.j@nexusdmc.travel"},{"n":"Lavanya N R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"lavanya.nr@nexusdmc.travel"},{"n":"Anusha P","t":"Account Manager","d":"Sales","l":"Bengaluru","e":"anusha.p@tripfactory.travel"},{"n":"Gagan S G","t":"Field Sales Executive","d":"Sales","l":"Bengaluru","e":"gagan.sg@nexusdmc.travel"},{"n":"Sagar S P","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"sagar.sp@nexusdmc.travel"},{"n":"Kruthik C","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"kruthik.c@tripfactory.travel"},{"n":"Shivaraj S R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"shivaraj.sr@nexusdmc.travel"},{"n":"Ankit Bansal","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"ankit.b@nexusdmc.travel"},{"n":"Lalit Kumar","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"lalit.k@nexusdmc.travel"},{"n":"Vivek Mandal","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"vivek.m@nexusdmc.travel"},{"n":"Tejaswini M","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":""},{"n":"Varsha R","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"varsha.r@tripfactory.com"},{"n":"Shivakumar S Y","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"s.shivakumar@tripfactory.travel"},{"n":"Rupam Kumari","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"rupam.k@nexusdmc.travel"},{"n":"Sayeda Afrin Banu","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"afrin.b@nexusdmc.travel"},{"n":"Deepa K S","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"deepa.ks@nexusdmc.travel"},{"n":"Vaneet Rana","t":"Assistant Manager","d":"Sales","l":"Gurgaon","e":"vaneet.r@tripfactory.com"},{"n":"Manish Singh Chaudhary","t":"Sr. Destination Expert","d":"Sales","l":"Gurgaon","e":"manish.sc@nexusdmc.travel"},{"n":"Saleem Elahi","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"saleem.e@nexusdmc.travel"},{"n":"Hyderali Meer","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"hyderali.meer@nexusdmc.travel"},{"n":"Abdul Usman Ali","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"abdul.u@nexusdmc.travel"},{"n":"Suhail Ahamed S","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"suhail.as@nexusdmc.travel"},{"n":"Suma G","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"suma.g@nexusdmc.travel"},{"n":"Kanhaiya Singh","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"kanhaiya.s@nexusdmc.travel"},{"n":"Sagar Prasad","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"sagar.p@nexusdmc.travel"},{"n":"Nikhil Chaturvedi","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"nikhil.c@tripfactory.travel"},{"n":"Ganya Shree D C","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"ganyashree.dc@nexusdmc.travel"},{"n":"Mohd Shuaib","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":""},{"n":"Surabhi Barman","t":"Sr. Destination Expert","d":"Sales","l":"Siliguri","e":"surabhi.b@nexusdmc.travel"},{"n":"Bhoomika A V","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"bhoomika.av@nexusdmc.travel"},{"n":"Naveen Kumar","t":"Account Manager","d":"Sales","l":"Bengaluru","e":"naveen.k@tripfactory.travel"},{"n":"Sandhya V","t":"Account Manager","d":"Sales","l":"Bengaluru","e":"sandhya.v@tripfactory.travel"},{"n":"Anusha S","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"s.anusha@nexusdmc.travel"},{"n":"Abinaya S","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"abinaya@tripfactory.travel"},{"n":"Nuthan Kumari L","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"nuthan.kl@nexusdmc.travel"},{"n":"Abhishek E Varghese","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"abhishek.ev@nexusdmc.travel"},{"n":"R Bhoomika","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"bhoomika.r@tripfactory.travel"},{"n":"Anu V","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"anu.v@tripfactory.travel"},{"n":"Harini B","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"harini.b@nexusdmc.travel"},{"n":"Srinath H","t":"Field Sales Executive","d":"Sales","l":"Bengaluru","e":"srinath.h@nexusdmc.travel"},{"n":"Sailesh Pradhan","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"sailesh.p@tripfactory.travel"},{"n":"Swathi C","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"swathi.c@nexusdmc.travel"},{"n":"Rakhi Sharma","t":"Account Manager","d":"Sales","l":"Bengaluru","e":"rakhi.s@nexusdmc.travel"},{"n":"P.Sosi Peter Wilson","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"sosi.p@tripfactory.travel"},{"n":"Amit Sharma","t":"Destination Expert","d":"Sales","l":"Bengaluru","e":"amit.s@tripfactory.travel"},{"n":"Neha N","t":"Account Manager","d":"Sales","l":"Bengaluru","e":"neha.n@tripfactory.travel"},{"n":"Ritika Gupta","t":"Destination Expert","d":"Sales","l":"Siliguri","e":"ritika.g@nexusdmc.travel"},{"n":"Shantanu Aggarwal","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"shantanu.a@tripfactory.travel"},{"n":"Shikha Sharma","t":"Destination Expert","d":"Sales","l":"Gurgaon","e":"shikha.s@tripfactory.com"},{"n":"Shivam Ramugrah Pandey","t":"Sr. Destination Expert","d":"Sales","l":"Mumbai","e":""},{"n":"Raheela Abdul Aziz Kaware","t":"Destination Expert","d":"Sales","l":"Mumbai","e":""},{"n":"Sujata Dambarsingh Budha","t":"Destination Expert","d":"Sales","l":"Mumbai","e":"sujata.db@tripfactory.travel"},{"n":"Saba Firdose","t":"Assistant Manager","d":"Sales","l":"Bengaluru","e":"saba@tripfactory.com"},{"n":"Jyotsna S","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"jyotsna.s@tripfactory.com"},{"n":"Raaj Navgrahe","t":"Tour Manager","d":"Sales","l":"Mumbai","e":"raaj.n@tripfactory.travel"},{"n":"Dipesh Kiran Kasar","t":"Tour Manager","d":"Sales","l":"Mumbai","e":"dipesh.kasar@tripfactory.travel"},{"n":"Shahanaz R","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"shahanaz@tripfactory.travel"},{"n":"Vijnesh Jayanandan Poojary","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"vijnesh@tripfactory.travel"},{"n":"Martin L Nerella","t":"Team Lead","d":"Sales","l":"Bengaluru","e":""},{"n":"Samudwith M S","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"samudwith.ms@nexusdmc.travel"},{"n":"Augustine Alex P","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"alex.p@tripfactory.travel"},{"n":"Deepthi G A","t":"Team Lead","d":"Sales","l":"Bengaluru","e":"deepthi.ga@tripfactory.travel"},{"n":"Gurpreet Singh","t":"Business Development Manager","d":"Sales","l":"Delhi","e":"gurpreet@tripfactory.com"},{"n":"Mohd Asif","t":"VP - Sales","d":"Sales","l":"Delhi","e":"asif@tripfactory.com"},{"n":"Gauri Shankar Gaud","t":"VP - Sales","d":"Sales","l":"Delhi","e":"gauri@tripfactory.com"},{"n":"Pankaj Silswal","t":"Business Development Executive","d":"Sales","l":"Bengaluru","e":"pankaj.silswal@nexusdmc.travel"},{"n":"Giriraj Singh","t":"Business Development Manager","d":"Sales","l":"Delhi","e":"giriraj@tripfactory.com"},{"n":"Ishan Mukesh Sheode","t":"Business Development Executive","d":"Sales","l":"Mumbai","e":"ishan@nexusdmc.travel"},{"n":"Nagaraju B K","t":"Sales Head - B2B (South India)","d":"Sales","l":"Bengaluru","e":"nagaraju.bk@tripfactory.com"},{"n":"Rohit S K","t":"Business Development Executive","d":"Sales","l":"Kolkata","e":"rohit.s.k@nexusdmc.travel"},{"n":"Ashish Kumar","t":"Business Development Executive","d":"Sales","l":"Bengaluru","e":"ashish.k@nexusdmc.travel"},{"n":"Dayananda C","t":"Business Development Executive","d":"Sales","l":"Bengaluru","e":"dayananda.c@nexusdmc.travel"},{"n":"Dhilak S","t":"Business Development Executive","d":"Sales","l":"Chennai","e":"dhilak.s@nexusdmc.travel"},{"n":"Sagarmal Sen","t":"Business Development Manager","d":"Sales","l":"Jabalpur","e":"sagarmal@nexusdmc.travel"},{"n":"Satyendra Goswami","t":"Business Development Manager","d":"Sales","l":"Delhi","e":"satyendra.g@nexusdmc.travel"},{"n":"Anuj Kumar Sareen","t":"Business Development Manager","d":"Sales","l":"Jabalpur","e":"anujsareen@tripfactory.com"},{"n":"Sagar B H M","t":"Business Development Executive","d":"Sales","l":"Bengaluru","e":"sagar.bhm@nexusdmc.travel"},{"n":"Ankitkumar Jha Kanhayamohan","t":"Business Development Executive","d":"Sales","l":"Surat","e":"ankit.km@nexusdmc.travel"},{"n":"Vinod Kumar","t":"Business Development Executive","d":"Sales","l":"Bhopal","e":"vinod.k@nexusdmc.travel"},{"n":"Athul P S","t":"Business Development Manager","d":"Sales","l":"kerala","e":"athul.ps@nexusdmc.travel"},{"n":"Dharmanand Dixit","t":"Area Sales Manager","d":"Sales","l":"lucknow","e":"dharmanand.d@nexusdmc.travel"},{"n":"Rajesh Kumar","t":"Area Sales Manager","d":"Sales","l":"Haryana","e":"rajesh.k@tripfactory.travel"},{"n":"Shipra Uttam Meshram","t":"Key Account Manager","d":"Sales","l":"Bengaluru","e":""},{"n":"Thriveni .","t":"Key Account Manager","d":"Sales","l":"Bengaluru","e":""},{"n":"Sowmya K P","t":"Key Account Manager","d":"Sales","l":"Bengaluru","e":"sowmya.p@tripfactory.com"},{"n":"Akbar Pasha","t":"Key Account Manager","d":"Sales","l":"Hyderabad","e":"akbar.p@nexusdmc.com"},{"n":"Rakesh Magar V","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"rakesh.mv@nexusdmc.travel"},{"n":"Pruthvi R S","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"pruthvi.rs@nexusdmc.travel"},{"n":"Punith Kumar V","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"punith.v@nexusdmc.travel"},{"n":"Moksh Sharma","t":"Account Manager","d":"Sales","l":"Gurgaon","e":"moksh.s@nexusdmc.travel"},{"n":"Ashwitha Y","t":"B2B Support Executive","d":"Sales","l":"Bengaluru","e":"ashwitha.y@nexusdmc.travel"},{"n":"Noel Joseph","t":"Business Development Executive","d":"Sales","l":"Kochi","e":"joseph.n@tripfactory.travel"},{"n":"Mohammed Asif","t":"Business Development Executive","d":"Sales","l":"Hyderabad","e":"asif.m@tripfactory.travel"},{"n":"Akshay Banodhiya","t":"Business Development Executive","d":"Sales","l":"Ahmedabad","e":"akshay.b@nexusdmc.travel"},{"n":"Yerra Venkat Sai Vamsi Vivek","t":"Business Development Executive","d":"Sales","l":"Hyderabad","e":"vamsi.v@nexusdmc.travel"},{"n":"Ajit KANIJKUMAR Sheth","t":"Area Sales Manager","d":"Sales","l":"Gujarat","e":""},{"n":"Gaurav Kumar Sharma","t":"Key Account Manager","d":"Sales","l":"Gurgaon","e":"gaurav.ks@nexusdmc.travel"},{"n":"Divya Mathur","t":"Key Account Manager","d":"Sales","l":"Gurgaon","e":"divya.m@nexusdmc.travel"},{"n":"Kollipara Dinesh","t":"Business Development Executive","d":"Sales","l":"Vishakhapatnam","e":"dinesh.k@tripfactory.travel"},{"n":"Manish Singh Rajput","t":"Key Account Manager","d":"Sales","l":"Gurgaon","e":"manish.r@nexusdmc.travel"},{"n":"Aman Jha","t":"Business Development Executive","d":"Sales","l":"Faridabad","e":"aman.jha@tripfactory.travel"},{"n":"Prashant Kalendra Manchkar","t":"Tour Manager","d":"Sales","l":"Mumbai","e":"p.manchkar@nexusdmc.travel"},{"n":"Jayesh P Rathod","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Rohan Sham Deshpande","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Shree Vasant Deshmukh","t":"Tour Manager","d":"Sales","l":"Mumbai","e":""},{"n":"Gogul G K","t":"Business Development Executive","d":"Sales","l":"Thrissur","e":"gogul.gk@nexusdmc.travel"},{"n":"Sourabh Nivas Kamble","t":"Business Development Executive","d":"Sales","l":"Mumbai","e":""},{"n":"Afaq Safeer Khan","t":"Business Development Executive","d":"Sales","l":"Mumbai","e":"afaq.s@nexusdmc.travel"},{"n":"Poornima Avinash Gunjalkar","t":"Destination  Expert","d":"Sales","l":"Mumbai","e":"poornima.ag@nexusdmc.travel"},{"n":"Vaishali Yadav","t":"Team Lead - Operations","d":"Operations","l":"Bengaluru","e":""},{"n":"Harshit Danwar","t":"Project Management Analyst - Operations","d":"Operations","l":"Gurgaon","e":"harshit.d@tripfactory.com"},{"n":"Bikash Roy","t":"Team Leader - Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"vikeeyslg@gmail.com"},{"n":"Poonam Kumari Thapa","t":"Head – Revenue and Operations","d":"Operations","l":"Siliguri","e":""},{"n":"Santosh Roy","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"santosh.roy@goflysmart.com"},{"n":"Sadhana Thapa","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"sadhana.gofly@gmail.com"},{"n":"Bidesh Chowdhury","t":"Team Leader - Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"tours@goflysmart.com"},{"n":"Nilkamal Sarkar","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"nilkamal.gofly@gmail.com"},{"n":"Alip Sengupta","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"alip.gofly@gmail.com"},{"n":"Aniket Deb","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":""},{"n":"Bhumika Roy","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"bhumika83000@gmail.com"},{"n":"Ashis Biswas","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"ashisgofly48000@gmail.com"},{"n":"Ramkrishna Paul","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"rampaul.goflysmart@gmail.com"},{"n":"Jayant Kumar Sinha","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"jayant.gofly@gmail.com"},{"n":"Charles Rai","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"charlesgoflysmart@gmail.com"},{"n":"Pritam Samajdar","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"pritam.goflysmart@gmail.com"},{"n":"Subhranil Basak","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"subhranil.gfs@tripfactory.com"},{"n":"Ankita Bhakta","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"ankita.goflysmart@gmail.com"},{"n":"Roshan Sharma","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"roshan.goflysmart@gmail.com"},{"n":"Pratikhcha Pradhan","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"pratikhchagoflysmart@gmail.com"},{"n":"Ajit Rai","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"ajit.goflysmart@gmail.com"},{"n":"Stuti Pradhan","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"stuti.gofly@gmail.com"},{"n":"Priyanjana Das","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"priyanjana.goflysmart@gmail.com"},{"n":"Shashank Gurung","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"shashank.goflysmart@gmail.com"},{"n":"Puja Biswas","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"pujabiswas.goflysmart@gmail.com"},{"n":"Panushree Thapa","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"panushree.goflysmart@gmail.com"},{"n":"Maria Goretti Sitling","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"maria.goflysmart@gmail.com"},{"n":"Pratigya Rai","t":"Operation Executive","d":"Operations","l":"Siliguri","e":"pratigya.r@tripfactory.travel"},{"n":"Sushmita Majumder","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"majumdersushmita01@gmail.com"},{"n":"Munin Basumatary","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"muninb725@gmail.com"},{"n":"Sham Sunder V","t":"Assistant Manager - Operations","d":"Operations","l":"Bengaluru","e":"sham.s@tripfactory.com"},{"n":"Bipul Daimari","t":"Team Lead - Operations","d":"Operations","l":"Bengaluru","e":"bipul@tripfactory.com"},{"n":"Magesh Mohanraj","t":"Team Lead - Operations","d":"Operations","l":"Bengaluru","e":"magesh@tripfactory.com"},{"n":"Pathan Mohammed P Saleem","t":"Team Lead - Operations","d":"Operations","l":"Bengaluru","e":""},{"n":"Reginold Simon","t":"Manager- Visa Operations","d":"Operations","l":"Bengaluru","e":"simon@tripfactory.com"},{"n":"Ronak Raju Dhanwani","t":"Operation Executive","d":"Operations","l":"Mumbai","e":"ronak@tripfactory.com"},{"n":"Mohammed Arif S","t":"Manager - DMC Operations","d":"Operations","l":"Bengaluru","e":"mohammed.arif@tripfactory.com"},{"n":"Shaik Abdul Masroor","t":"Deputy Manager - Group Desk","d":"Operations","l":"Bengaluru","e":"masroor@tripfactory.com"},{"n":"Akash Kumar","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"akash.kumar@tripfactory.com"},{"n":"Saranya M","t":"SME - Payments","d":"Operations","l":"Bengaluru","e":"saranya@tripfactory.travel"},{"n":"Suresh V","t":"SME - Delivery","d":"Operations","l":"Bengaluru","e":""},{"n":"Sharath Kumar A","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"sharath.kumar@tripfactory.travel"},{"n":"Faisal syed mukthar Shah","t":"Team Leader - Care","d":"Operations","l":"Bengaluru","e":"faisal.shah@tripfactory.travel"},{"n":"Bhaskar V","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"bhaskar@tripfactory.com"},{"n":"Chhaya Kumari","t":"Manager- Visa Operations","d":"Operations","l":"Bengaluru","e":"chhaya@tripfactory.com"},{"n":"Asha S","t":"Chat Support Executive","d":"Operations","l":"Bengaluru","e":"asha@tripfactory.travel"},{"n":"Mohammed Nabeel Faraz","t":"Assistant Manager - Operations","d":"Operations","l":"Bengaluru","e":"nabeel@tripfactory.com"},{"n":"S Mamatha","t":"Asst.Manager- Visa Operations","d":"Operations","l":"Bengaluru","e":""},{"n":"Nithin D","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":"nithin.d@tripfactory.com"},{"n":"Vigneshwaran K","t":"Senior Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":"vigneshwaran.k@tripfactory.com"},{"n":"Mohammed Suhail","t":"Team Lead - Operations","d":"Operations","l":"Bengaluru","e":"suhail@tripfactory.com"},{"n":"Abhishek Haldia","t":"Visa Executive","d":"Operations","l":"Gurgaon","e":""},{"n":"Kiran N","t":"Team Leader - Operations","d":"Operations","l":"Bengaluru","e":"kiran.n@tripfactory.com"},{"n":"Sindhu S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"sindhu.g@tripfactory.com"},{"n":"Tousif Sait","t":"Deputy Manager - Flights Operations","d":"Operations","l":"Bengaluru","e":"tousif.sait@tripfactory.com"},{"n":"Charitha Ravi","t":"Team Lead - Operations","d":"Operations","l":"Bengaluru","e":"charitha@tripfactory.com"},{"n":"Veda K","t":"SME","d":"Operations","l":"Bengaluru","e":"veda@tripfactory.com"},{"n":"Shruthi N","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":""},{"n":"Ganesh Raju N","t":"Sr Operation Executive","d":"Operations","l":"Bengaluru","e":"ganesh.raju@tripfactory.com"},{"n":"Shashank H M","t":"Deputy Manager - Operations","d":"Operations","l":"Bengaluru","e":"shashank@tripfactory.com"},{"n":"Venkatesh Prasad N H","t":"Team Leader - Care","d":"Operations","l":"Bengaluru","e":"venkatesh@tripfactory.com"},{"n":"Jaychandra H S","t":"Assistant Manager - Operations","d":"Operations","l":"Bengaluru","e":""},{"n":"Ifraq Ahmed R N","t":"Manager - DMC Operations","d":"Operations","l":"Bengaluru","e":"ifraq.ahmed@tripfactory.com"},{"n":"Riddhi Dhirendra Waghela","t":"Team Leader – FIT Europe","d":"Operations","l":"Mumbai","e":"riddhi@tripfactory.com"},{"n":"Mohammed Sameerulla Khan","t":"Team Lead - Operations","d":"Operations","l":"Bengaluru","e":"sameer@tripfactory.com"},{"n":"Sagar Padmakar Joshi","t":"Tour Manager","d":"Operations","l":"Mumbai","e":"sagar@tripfactory.com"},{"n":"Pravir Pathak","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":"pravin@tripfactory.com"},{"n":"Sagar Mukherjee","t":"Sr. Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"sagarmukherjee@tripfactory.com"},{"n":"Kavya S","t":"Customer Support Executive - Payments","d":"Operations","l":"Bengaluru","e":"kavya@tripfactory.travel"},{"n":"Anusha S","t":"Chat Support Executive","d":"Operations","l":"Bengaluru","e":"s.anusha@nexusdmc.travel"},{"n":"Mousham Kumari","t":"Customer Support Executive","d":"Operations","l":"Siliguri","e":"mousham.goflysmart@gmail.com"},{"n":"Luni Sewa","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"luni.goflysmart@gmail.com"},{"n":"Debashmita Bhattacherjee","t":"Operation Executive","d":"Operations","l":"Siliguri","e":""},{"n":"Harshitha R","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"harshitha.r@tripfactory.com"},{"n":"Kumar Babu G V","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":""},{"n":"Balachandar H Benakatti","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"balachandar.h@tripfactory.com"},{"n":"Abhishek Mohanta","t":"Operation Executive","d":"Operations","l":"Gurgaon","e":"abhishek.m@tripfactory.com"},{"n":"Ramyashree M","t":"Operation Executive - Insurance","d":"Operations","l":"Bengaluru","e":"ramyashree.m@tripfactory.com"},{"n":"Neha U","t":"Customer Support Executive - Payments","d":"Operations","l":"Bengaluru","e":"neha.u@tripfactory.travel"},{"n":"Aditi Singh","t":"Customer Support Executive - Payments","d":"Operations","l":"Bengaluru","e":"aditi.s@tripfactory.travel"},{"n":"Aravind P","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":"aravind.p@tripfactory.com"},{"n":"Madhuri A","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":""},{"n":"Sai Charan M","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"sai.c@tripfactory.com"},{"n":"Smitha Shet","t":"Customer Support Executive - Payments","d":"Operations","l":"Bengaluru","e":"smitha.s@tripfactory.travel"},{"n":"Rakshitha Ganesh","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"rakshitha.g@tripfactory.com"},{"n":"Rahul Kumar","t":"Customer Support Executive - Callcenter","d":"Operations","l":"Bengaluru","e":"rahul.kumar@tripfactory.travel"},{"n":"Kaushik S","t":"Assistant Manager - Operations","d":"Operations","l":"Bengaluru","e":"kaushik@tripfactory.com"},{"n":"Nithyananda S C","t":"Sr Operation Executive","d":"Operations","l":"Bengaluru","e":"nithyananda.sc@nexusdmc.travel"},{"n":"Sk Asif Akram","t":"Sr. Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"asif.a@tripfactory.com"},{"n":"Thanush Reddy S B","t":"Team Leader - Esclations","d":"Operations","l":"Bengaluru","e":"thanush.sb@tripfactory.com"},{"n":"Ira Mukund Bhatt","t":"Europe Customer Experience","d":"Operations","l":"Mumbai","e":"ira.b@tripfactory.com"},{"n":"Bhimashankar Ravindra Kulkarni","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":""},{"n":"Lokesh C Savadatti","t":"Operation Executive - Insurance","d":"Operations","l":"Bengaluru","e":"lokesh.cs@tripfactory.travel"},{"n":"Chiranjit Boro","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"chiranjit.b@tripfactory.com"},{"n":"Parvesh Kumari","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"parvesh.k@tripfactory.com"},{"n":"Kunal Ekka","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"kunal.goflysmart@gmail.com"},{"n":"Khusboo Moktan","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"khusboo.goflysmart@gmail.com"},{"n":"James Clement","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"jameclement91@gmail.com"},{"n":"Rohit Sharma","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"rohit.sharma@tripfactory.com"},{"n":"Survi Verma","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":""},{"n":"Abhishek Teron","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"abhishekteron169@gmail.com"},{"n":"Navya P","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"navya.p@nexusdmc.travel"},{"n":"Mohammed Arbaz Pasha","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"arbaz.p@tripfactory.travel"},{"n":"Johnson K","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"johnson.k@tripfactory.travel"},{"n":"Chandana V","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"chandana@tripfactory.travel"},{"n":"Mohini V Handewale","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"mohini.h@tripfactory.com"},{"n":"Prem Kumar E","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"prem@tripfactory.travel"},{"n":"Suhas G","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"suhas.g@tripfactory.travel"},{"n":"Deepika V","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"deepika.v@tripfactory.travel"},{"n":"Zeenath Begum","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"zeenath.b@tripfactory.travel"},{"n":"Akhila B","t":"Chat Support Executive","d":"Operations","l":"Bengaluru","e":"akhila.b@tripfactory.travel"},{"n":"Patricia Denzil","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"patricia.d@tripfactory.travel"},{"n":"Anushree S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"anushree.s@tripfactory.travel"},{"n":"Bhargavi B","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"bhargavi.b@tripfactory.travel"},{"n":"Mehar unnisa","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":""},{"n":"Aishwarya A","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"aishwarya.a@nexusdmc.travel"},{"n":"Nisarga C S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"nisarga.cs@tripfactory.travel"},{"n":"Gifty G","t":"Customer Support Executive - Callcenter","d":"Operations","l":"Bengaluru","e":"gifty.g@tripfactory.travel"},{"n":"Sadhana P","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"sadhana.p@tripfactory.travel"},{"n":"Manjula S","t":"Customer Support Executive - Payments","d":"Operations","l":"Bengaluru","e":"manjula.s@nexusdmc.travel"},{"n":"Rashmika G","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"rashmika.g@tripfactory.com"},{"n":"Abhijeet Ranjan","t":"Customer Support Executive - Esclations","d":"Operations","l":"Bengaluru","e":"abhijeet.r@tripfactory.travel"},{"n":"Shivangi Vishwakarma","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"shivangi.v@tripfactory.travel"},{"n":"Sonia Yadav","t":"Visa Executive","d":"Operations","l":"Gurgaon","e":""},{"n":"Shoaib Chand Ansari","t":"Operation Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Annwesha Pal","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":"annwesha.p@tripfactory.com"},{"n":"Khaleel Ur Rehman","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"khaleel.r@tripfactory.travel"},{"n":"Ameena Iram","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"ameena.i@tripfactory.com"},{"n":"Meghana M S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"meghana.ms@tripfactory.com"},{"n":"Sajiya Hussain","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":""},{"n":"Zehra Khatoon Khan","t":"Operation Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Sonia Mothay","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":""},{"n":"Kalyani Prasad","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"kalyani.goflysmart@gmail.com"},{"n":"Sayankan Paul","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"sayankan.p@tripfactory.travel"},{"n":"Deeksha N S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"deeksha@tripfactory.travel"},{"n":"Harish R","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"harish.r@tripfactory.com"},{"n":"Spandhana K V","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"spandhana.kv@tripfactory.travel"},{"n":"Suraj C J","t":"Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":""},{"n":"Vijaya kumar J","t":"Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":"vijaya.k@tripfactory.com"},{"n":"Vaisakh P V","t":"Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":"vaisakh.pv@tripfactory.com"},{"n":"Mohammed Sadath Khan","t":"Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":"sadath.k@tripfactory.com"},{"n":"Saloni Tokas","t":"Visa Executive","d":"Operations","l":"Gurgaon","e":"saloni.t@tripfactory.com"},{"n":"Aryan Bantawa Rai","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":""},{"n":"Chitto Broto Goswami","t":"Operation Executive","d":"Operations","l":"Siliguri","e":"goswami.cb@tripfactory.travel"},{"n":"Rikesh Tamang","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"rikesh.t@tripfactory.travel"},{"n":"Chiraag Chakraborthy","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"chiraag.c@nexusdmc.travel"},{"n":"Nupur Biswas","t":"Air Ticketing Executive","d":"Operations","l":"Siliguri","e":"nupur.gofly@gmail.com"},{"n":"Chandhan V K","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"chandhan.vk@tripfactory.travel"},{"n":"Rakshitha M S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"rakshitha.ms@tripfactory.travel"},{"n":"Saloni U K","t":"Customer Support Executive - Esclations","d":"Operations","l":"Bengaluru","e":"saloni.uk@tripfactory.travel"},{"n":"Rakshitha V","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"rakshitha.v@tripfactory.com"},{"n":"Chandan P R","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"chandan.pr@tripfactory.com"},{"n":"Naina Premchand Kamat","t":"Visa Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Mohammed Masood Ahmed","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"ahmed.m@tripfactory.travel"},{"n":"Nikita Kharbanda","t":"Visa Executive","d":"Operations","l":"Gurgaon","e":"nikita.k@tripfactory.com"},{"n":"Taniya Nandi","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"taniya.n@tripfactory.travel"},{"n":"Varsha C A","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"varsha.c.a@tripfactory.travel"},{"n":"Pradeep M","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"pradeep.m@tripfactory.travel"},{"n":"Navya G","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"navya.g@tripfactory.travel"},{"n":"V Laxman Kumar","t":"Operation Executive","d":"Operations","l":"Gurgaon","e":"laxman.v@tripfactory.com"},{"n":"Syed Mubarak","t":"Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":"syed.mubarak@tripfactory.com"},{"n":"Tripti Bhardwaj","t":"Operation Executive","d":"Operations","l":"Gurgaon","e":"tripti.b@tripfactory.com"},{"n":"Abhishek .","t":"Sr Operation Executive","d":"Operations","l":"Gurgaon","e":"abhishek.1@tripfactory.com"},{"n":"Harish R","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"harish.r@tripfactory.com"},{"n":"Ganesh S S","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":""},{"n":"Mohammed Faizad","t":"Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":"faizad.m@tripfactory.com"},{"n":"Shekhar Santosh Patil","t":"Operation Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Shravan Kumar Bind","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":""},{"n":"Sujanya N S","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":"sujanya@tripfactory.com"},{"n":"Nagma M","t":"Customer Support Executive - Callcenter","d":"Operations","l":"Bengaluru","e":"nagma.fathima@nexusdmc.travel"},{"n":"Harry Jenifer Z","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"harry.j@tripfactory.travel"},{"n":"Sunil M S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"sunil.ms@tripfactory.travel"},{"n":"Darshan S","t":"Sr. Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"s.darshan@tripfactory.travel"},{"n":"Koushik s","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"koushik.s@tripfactory.travel"},{"n":"Navya A R","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"navya.a@tripfactory.travel"},{"n":"Prekha Vadhini T","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"prekha.v@tripfactory.travel"},{"n":"Chaithra V","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"chaithra.v@tripfactory.travel"},{"n":"Chandana R","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"chandana.r@tripfactory.com"},{"n":"Mahima A","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"mahima.a@tripfactory.com"},{"n":"Nandini R","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"nandini.r@tripfactory.com"},{"n":"Deepika G","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"deepika.g@tripfactory.com"},{"n":"Bharath Kumar D","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"bharath.d@tripfactory.com"},{"n":"Sandesh L","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"sandesh.l@tripfactory.travel"},{"n":"Madan S","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"madan.s@tripfactory.com"},{"n":"Leonard Vicky","t":"Air Ticketing Executive","d":"Operations","l":"Bengaluru","e":"vicky.l@tripfactory.com"},{"n":"Rakshitha R","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"r.rakshitha@tripfactory.travel"},{"n":"Sanjay S","t":"Customer Support Executive - Esclations","d":"Operations","l":"Bengaluru","e":"sanjay.s@nexusdmc.travel"},{"n":"Nirag K A","t":"Customer Support Executive - Esclations","d":"Operations","l":"Bengaluru","e":"nirag@tripfactory.travel"},{"n":"Varshini N","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"varshini.n@tripfactory.travel"},{"n":"Mahammadhusain Saeed Bijale","t":"Operation Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Mehul Sanjay Bhalerao","t":"Operation Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Gnana Deepa Nadar","t":"Operation Executive","d":"Operations","l":"Mumbai","e":"deepa.n@tripfactory.com"},{"n":"Aaron Parmar","t":"Operation Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Ananya C C","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"ananya.cc@tripfactory.travel"},{"n":"Kavya D R","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"kavya.dr@tripfactory.travel"},{"n":"Ramisha Antony Raj","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"ramisha.a@tripfactory.travel"},{"n":"Hari Krishna S","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":"hari.krishna@tripfactory.travel"},{"n":"Chandrashekar M","t":"Customer Support Executive - Delivery","d":"Operations","l":"Bengaluru","e":""},{"n":"Delita Agnelo Fernandes","t":"Operation Executive","d":"Operations","l":"Mumbai","e":"delita.f@tripfactory.com"},{"n":"Kavya M","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"kavya.k@tripfactory.travel"},{"n":"Mohsina Begum","t":"Customer Support Executive - Callcenter","d":"Operations","l":"Bengaluru","e":"mohsina.b@tripfactory.travel"},{"n":"Sanjeev Kumar Chhikara","t":"Regional Head Visa (North & West)","d":"Operations","l":"Gurgaon","e":"sanjeev.kc@tripfactory.com"},{"n":"Amir Shafi Shaikh","t":"Tour Manager","d":"Operations","l":"Mumbai","e":"amir.s@tripfactory.com"},{"n":"Puja Vivekanand Onekar","t":"FIT Operations Head - Europe","d":"Operations","l":"Mumbai","e":""},{"n":"Anto R Abhishek","t":"Customer Support  Executive","d":"Operations","l":"Bengaluru","e":"abhishek.anto@tripfactory.travel"},{"n":"Raveesh Kumaresan Kumaresan Sumathi","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":""},{"n":"Rutika Rajendra More","t":"Operation Executive","d":"Operations","l":"Mumbai","e":"rutika.rm@tripfactory.travel"},{"n":"Siddhesh Shankar Kurlekar","t":"Operation Executive","d":"Operations","l":"Mumbai","e":""},{"n":"Mahesh Kumar Lakra","t":"Head of Embassy Relationship Officer","d":"Operations","l":"Gurgaon","e":"mahesh.kl@tripfactory.com"},{"n":"Dheena Dhayalan G","t":"Air Ticketing  Executive","d":"Operations","l":"Bengaluru","e":"dheena.dhayalan@tripfactory.travel"},{"n":"Dinakaran M","t":"Air Ticketing  Executive","d":"Operations","l":"Bengaluru","e":"dinakaran.m@tripfactory.com"},{"n":"Sarjeet Khatri","t":"Visa Executive","d":"Operations","l":"Bengaluru","e":"sarjeet.k@tripfactory.com"},{"n":"Tannishtha Ajaykumar Patil","t":"Operation Executive","d":"Operations","l":"Bengaluru","e":"tannishtha.p@tripfactory.travel"},{"n":"Veer Khandu Shinde","t":"Operation   Executive","d":"Operations","l":"Bengaluru","e":"veerkhandu.s@nexusdmc.travel"},{"n":"Richie","t":"Bangalore Head- B2B","d":"Product","l":"Bengaluru","e":"richie@tripfactory.com"},{"n":"Shriya Gupta","t":"Supply Relationship Manager","d":"Product","l":"Gurgaon","e":"shriya.g@tripfactory.com"},{"n":"Ashish Yadav","t":"VP - Product & Growth","d":"Product","l":"Gurgaon","e":"ashish@tripfactory.com"},{"n":"Shaurya Pratap Singh","t":"Contracting Manager","d":"Product","l":"Gurgaon","e":"shaurya@tripfactory.com"},{"n":"Naveen Rajesh","t":"Assistant Manager - Product","d":"Product","l":"Bengaluru","e":"naveen.r@tripfactory.com"},{"n":"Varsha Thapa","t":"Product Executive","d":"Product","l":"Siliguri","e":"varsha.t@nexusdmc.travel"},{"n":"Nandana N","t":"Senior Product Executive","d":"Product","l":"Bengaluru","e":"nandana@tripfactory.travel"},{"n":"Saif Ansar Khan","t":"Contracting & Marketing Head - UK & Europe","d":"Product","l":"Mumbai","e":"saif@tripfactory.com"},{"n":"Diana S K","t":"Product Executive","d":"Product","l":"Bengaluru","e":"diana.sk@tripfactory.travel"},{"n":"Rajeev Gautam","t":"Head - North Contracting","d":"Product","l":"Gurgaon","e":"rajeev@tripfactory.com"},{"n":"Asha Aswathaiah","t":"Product Executive","d":"Product","l":"Bengaluru","e":"asha.a@tripfactory.com"},{"n":"Indramma .","t":"Product Executive","d":"Product","l":"Bengaluru","e":""},{"n":"Disha Mooljee","t":"Senior Product Manager","d":"Product","l":"Mumbai","e":"disha.mooljee@tripfactory.com"},{"n":"Shreyas N","t":"Product Executive","d":"Product","l":"Bengaluru","e":"n.shreyas@tripfactory.travel"},{"n":"Suraksha Shetty","t":"Product Executive","d":"Product","l":"Bengaluru","e":""},{"n":"Manisha M Jain","t":"Product Executive","d":"Product","l":"Bengaluru","e":"manisha.jain@tripfactory.travel"},{"n":"Ravitej S M","t":"Product Executive","d":"Product","l":"Bengaluru","e":"ravitej.sm@tripfactory.travel"},{"n":"Jawahar R","t":"Product Executive","d":"Product","l":"Bengaluru","e":"jawahar@tripfactory.com"},{"n":"Vasumitha G","t":"Product Executive","d":"Product","l":"Bengaluru","e":"vasumitha.g@nexusdmc.travel"},{"n":"Yuvraj V B","t":"Product Executive","d":"Product","l":"Bengaluru","e":"yuvraj.acharya@nexusdmc.travel"},{"n":"Girish V","t":"Product Executive","d":"Product","l":"Bengaluru","e":"girish.v@nexusdmc.travel"},{"n":"Praveen Kumar K","t":"Product Executive","d":"Product","l":"Bengaluru","e":"praveen.k@nexusdmc.travel"},{"n":"Shaikh Humera","t":"Product Executive","d":"Product","l":"Bengaluru","e":""},{"n":"Siddiq K R","t":"Product Executive","d":"Product","l":"Bengaluru","e":""},{"n":"Vatsal Jalla","t":"Senior Product Executive","d":"Product","l":"Bengaluru","e":"vatsal.j@tripfactory.travel"},{"n":"Lakshmi M Maraddi","t":"Product Executive","d":"Product","l":"Bengaluru","e":"lakshmi.m@nexusdmc.travel"},{"n":"Chethana T N","t":"Product Executive","d":"Product","l":"Bengaluru","e":"chethana.tn@tripfactory.travel"},{"n":"Nikitha S","t":"Product Executive","d":"Product","l":"Bengaluru","e":"nikitha.s@tripfactory.travel"},{"n":"Nandhini S","t":"Product Executive","d":"Product","l":"Bengaluru","e":"s.nandhini@tripfactory.travel"},{"n":"Joseph Raj A","t":"Product Executive","d":"Product","l":"Bengaluru","e":"joseph.raj@nexusdmc.travel"},{"n":"Sriramana S","t":"Product Executive","d":"Product","l":"Bengaluru","e":"sriramana.s@tripfactory.com"},{"n":"Sandhya Manandhar","t":"Product Executive","d":"Product","l":"Bengaluru","e":"m.sandhya@tripfactory.com"},{"n":"Sheetal V","t":"Product Executive","d":"Product","l":"Bengaluru","e":"sheetal.v@nexusdmc.travel"},{"n":"M J Shakthi Pallavi","t":"Product Executive","d":"Product","l":"Bengaluru","e":"shakthi.p@tripfactory.travel"},{"n":"Raghav RK","t":"Product Executive","d":"Product","l":"Bengaluru","e":""},{"n":"Aishwarya T V","t":"Product Executive","d":"Product","l":"Bengaluru","e":"aishwarya.tv@tripfactory.travel"},{"n":"Mallikarjuna T","t":"Product Executive","d":"Product","l":"Bengaluru","e":"mallikarjuna.t@tripfactory.travel"},{"n":"Nitin Kumar Madeshia","t":"Director of Product","d":"Product","l":"Noida","e":""},{"n":"Mohsin Ahmed Batla","t":"Director of Product","d":"Product","l":"Noida","e":"mohsin.ab@tripfactory.com"},{"n":"Bushra Shafi Sayyed","t":"Product Executive","d":"Product","l":"Bengaluru","e":""},{"n":"Rahul Kumar Sharma","t":"Product Executive","d":"Product","l":"Bengaluru","e":"rahulkumar.s@tripfactory.travel"},{"n":"Chandra Kothari","t":"Product Executive","d":"Product","l":"Bengaluru","e":"chandra.kothari@tripfactory.travel"},{"n":"Pallavi Jain","t":"Product Executive","d":"Product","l":"Bengaluru","e":"pallavi.jain@tripfactory.travel"},{"n":"Sougata Saha","t":"Product Executive","d":"Product","l":"Siliguri","e":"sougata.saha@tripfactory.travel"},{"n":"Raghu S T","t":"Product Executive","d":"Product","l":"Bengaluru","e":"raghu.st@tripfactory.travel"},{"n":"Ashna Sunilkumar Sadhwani","t":"Product Executive","d":"Product","l":"Bengaluru","e":"ashna.sadhwani@tripfactory.travel"},{"n":"Vaishnavi Suraj Poul","t":"Product Management Intern","d":"Product","l":"Bengaluru","e":""},{"n":"Kritik Purohit","t":"Senior Operation Executive ","d":"Product","l":"Gurgaon","e":""},{"n":"Siva sanmugavel NU","t":"Product Management Intern","d":"Product","l":"Bengaluru","e":"siva.s@tripfactory.travel"},{"n":"Sneha Zimolson Paul","t":"Product Management Intern","d":"Product","l":"Bengaluru","e":"sneha.zp@tripfactory.travel"},{"n":"Anik Saha","t":"Software Engineer","d":"Technology","l":"Siliguri","e":"anik.saha@tripfactory.travel"},{"n":"Sirajuddin Reniman","t":"Senior Engineering Manager","d":"Technology","l":"Bengaluru","e":"siraj@tripfactory.com"},{"n":"Dhruv Minotra","t":"Senior Software Engineer","d":"Technology","l":"Delhi","e":"dhruv@tripfactory.com"},{"n":"Atul Bhaskar","t":"Senior Software Engineer","d":"Technology","l":"Delhi","e":"atul@tripfactory.com"},{"n":"Abhishek Dhiman","t":"Software Development Engineer - II","d":"Technology","l":"Delhi","e":"abhishek.d@tripfactory.com"},{"n":"Shahid Siraj","t":"Senior Software Engineer","d":"Technology","l":"Pune","e":"shahid@tripfactory.com"},{"n":"Amit Kumar","t":"Software Development Engineer - II","d":"Technology","l":"Bihar","e":"amitkumar@tripfactory.com"},{"n":"Naman Varshney","t":"Principle Architect","d":"Technology","l":"Bengaluru","e":"naman.v@tripfactory.com"},{"n":"Mohit Anand","t":"Software Engineer","d":"Technology","l":"Bengaluru","e":"mohit.anand@tripfactory.com"},{"n":"Abhishek Sharma","t":"Senior Software Engineer","d":"Technology","l":"Uttar Pradesh","e":"abhishek.sharma@tripfactory.com"},{"n":"Ram Krishna Garg","t":"VP - Engineering","d":"Technology","l":"Delhi","e":"ram.garg@tripfactory.com"},{"n":"Deepankar Mondal","t":"Technical Lead","d":"Technology","l":"Siliguri","e":"deepankar.mondal@tripfactory.com"},{"n":"Nagarajan Thangavel","t":"Senior Software Engineer","d":"Technology","l":"Bengaluru","e":"nagarajan.t@tripfactory.com"},{"n":"Thageer Ashraf S","t":"Sr.Product Designer","d":"Technology","l":"Bengaluru","e":"thageer.a@tripfactory.com"},{"n":"Shrinivas Ravindra Devarkonda","t":"Senior Vice President - Devops and Infrastructure","d":"Technology","l":"Bengaluru","e":"sd@tripfactory.com"},{"n":"Kshitiz Gupta","t":"Lead Software Engineer","d":"Technology","l":"Bengaluru","e":"kshitiz.g@tripfactory.com"},{"n":"Sarath R Nair","t":"Software Engineer","d":"Technology","l":"Bengaluru","e":""},{"n":"Rahul Kumar Ram","t":"Software Engineer","d":"Technology","l":"Noida","e":"rahul.r@tripfactory.com"},{"n":"Deva Dharshini S","t":"Sr.Product Designer","d":"Technology","l":"Bengaluru","e":"deva.ds@tripfactory.com"},{"n":"Sheersh Atrishi","t":"Software Engineer","d":"Technology","l":"Noida","e":"sheersh.a@tripfactory.com"},{"n":"Anika Bansal","t":"Software Engineer","d":"Technology","l":"Noida","e":"anika.b@tripfactory.com"},{"n":"Vishal Kumar K A","t":"Sr.Product Designer","d":"Technology","l":"Bengaluru","e":"vishal.ka@tripfactory.com"},{"n":"Hareesh Govindan","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"hareesh.g@tripfactory.travel"},{"n":"Suraj Patil","t":"Software Test Engineer","d":"Technology","l":"Bengaluru","e":"suraj.p@tripfactory.com"},{"n":"Kumari Riya","t":"Software Engineer","d":"Technology","l":"Bengaluru","e":"k.riya@tripfactory.com"},{"n":"Anusha S P","t":"Senior Test Engineer","d":"Technology","l":"Bengaluru","e":"anusha.sp@tripfactory.com"},{"n":"Maguluri Yaswanth Reddy","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"yaswanth.r@tripfactory.travel"},{"n":"Dinesh R","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"dinesh.r@tripfactory.travel"},{"n":"Aravind Induri","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"aravind.i@tripfactory.travel"},{"n":"Vishal Sinha","t":"Engineering Manager","d":"Technology","l":"Bengaluru","e":"vishal.s@tripfactory.com"},{"n":"Alok Patel","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"alok.patel@tripfactory.travel"},{"n":"Sanskar Tyagi","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"sanskar.tyagi@tripfactory.travel"},{"n":"Mohit Viswkarma","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"mohit.viswkarma@tripfactory.travel"},{"n":"Prajwal B M","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"prajwal.bm@tripfactory.travel"},{"n":"Shubham Kumar Baranwal","t":"Senior Engineering Manager","d":"Technology","l":"Bengaluru","e":"shubham.b@tripfactory.com"},{"n":"Aashish Manohar Varlani","t":"Senior Software Engineer","d":"Technology","l":"Bengaluru","e":"aashish.v@tripfactory.com"},{"n":"Subhankar Sen","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":""},{"n":"Sachin Kushawaha","t":"Senior Engineering Manager","d":"Technology","l":"Bengaluru","e":"sachin.k@tripfactory.com"},{"n":"Ansh Lakhera","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"ansh.lakhera@tripfactory.travel"},{"n":"Nikhil Niranjan Wakode","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":""},{"n":"Ved Sarang Kulkarni","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":""},{"n":"Pradip Dattatray Yadav","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":""},{"n":"Cephas Gokula","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"cephas.gokula@tripfactory.travel"},{"n":"Surya Poojith Kanchu Stambham","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":""},{"n":"Shivamani G","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"shivamani@tripfactory.travel"},{"n":"Kunal Agarwal","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"kunal.agarwal@tripfactory.travel"},{"n":"Yuvin Raja","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"yuvin.raja@tripfactory.travel"},{"n":"Pranshu Chaurasia","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"pranshu.chaurasia@tripfactory.travel"},{"n":"Martin Vakada","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"martin.vakada@tripfactory.travel"},{"n":"Abhinav Karthik","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"abhinav.karthik@tripfactory.travel"},{"n":"Priyanshu Upadhyay","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"priyanshu.upadhyay@tripfactory.travel"},{"n":"Chinmay Sanjay Tavarej","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"chinmay.st@tripfactory.travel"},{"n":"Sumit Mahendra More","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":""},{"n":"Krishna Gupta","t":"Tech- Intern","d":"Technology","l":"Noida","e":"krishna.gupta@tripfactory.travel"},{"n":"Sonu Kumar Mahto","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"sonu.kumarmahto@tripfactory.travel"},{"n":"Pawanraje Sukumar Ukarde","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"pawanraje.su@tripfactory.travel"},{"n":"Vishesh P Gowda","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":""},{"n":"Shubham Raju Wagh","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"shubham.rw@tripfactory.travel"},{"n":"C Siva Kumar","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"siva.kumar@tripfactory.travel"},{"n":"Aman Santosh Jaiswal","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"aman.sj@tripfactory.travel"},{"n":"Ketan Bajpai","t":"Tech- Intern","d":"Technology","l":"Noida","e":"ketan.bajpai@tripfactory.travel"},{"n":"Mridul Pandey","t":"Tech- Intern","d":"Technology","l":"Noida","e":"mridul.pandey@tripfactory.travel"},{"n":"OM Shandilya","t":"Tech- Intern","d":"Technology","l":"Noida","e":"om.shandilya@tripfactory.travel"},{"n":"Deepak kumar Ojha","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"deepak.ko@tripfactory.travel"},{"n":"Tumu Sujay Babu","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"sujaybabu@tripfactory.travel"},{"n":"Krishna Prasad S","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"krishna.prasad@tripfactory.travel"},{"n":"KH SRUJAN GOWDA","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"srujan.g@tripfactory.travel"},{"n":"ANANDHU BIJU","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"anandhu.biju@tripfactory.travel"},{"n":"Krithik Raja M","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"krithik.rm@tripfactory.travel"},{"n":"Ravi S","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"ravi.s@tripfactory.travel"},{"n":"Vighnesh M S","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"vighnesh.ms@tripfactory.travel"},{"n":"Rohan A R","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":""},{"n":"ANKUR ANAND","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"ankur.a@tripfactory.travel"},{"n":"Bandi Karthik","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"karthik.b@tripfactory.travel"},{"n":"Sravan Peddakotla","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"sravan.p@tripfactory.travel"},{"n":"Vedansh Srivastava","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"vedansh.s@tripfactory.travel"},{"n":"Ishan Gupta","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"ishan.g@tripfactory.travel"},{"n":"Tharun J S","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"tharun.js@tripfactory.travel"},{"n":"Sarthak Gupta Gupta","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":""},{"n":"Vishnu Vardhan P R","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"vishnu.pr@tripfactory.travel"},{"n":"Akshat Verma","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"akshat.v@tripfactory.travel"},{"n":"Kushagra Sharma","t":"Tech- Intern","d":"Technology","l":"Noida","e":"kushagra.sharma@tripfactory.travel"},{"n":"Priyanshu Sharma","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"priyanshu.s@tripfactory.travel"},{"n":"Arpan Biswas","t":"AI Solution Architect","d":"Technology","l":"Bengaluru","e":"arpan.b@tripfactory.com"},{"n":"Devduth Surendran","t":"Product Designer","d":"Technology","l":"Bengaluru","e":"devduth.s@tripfactory.travel"},{"n":"Rahul S V","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"rahul.sv@tripfactory.travel"},{"n":"Umar Farooq","t":"Tech- Intern","d":"Technology","l":"Bengaluru","e":"umar.f@tripfactory.travel"},{"n":"Vishal Vishwakarma","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"vishal.v@tripfactory.travel"},{"n":"Mani Maha Parvas","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"saichandra@tripfactory.travel"},{"n":"Harsha Vardhan Lakavath","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"harshavardhan.l@tripfactory.travel"},{"n":"Arun Agnes","t":"Software Development Engineer - I","d":"Technology","l":"Bengaluru","e":"arun.a@tripfactory.travel"},{"n":"Kishan Singh Shahi","t":"Sr. Accountant","d":"Finance","l":"Siliguri","e":"kishan@tripfactory.com"},{"n":"Kartik Karjee","t":"Branch Manager","d":"Finance","l":"Siliguri","e":"kartikkarjee358@gmail.com"},{"n":"Rajesh Adhikari","t":"Accounts Executive","d":"Finance","l":"Siliguri","e":"rajipadhikari448@gmail.com"},{"n":"Pritam Roy","t":"Accountant","d":"Finance","l":"Siliguri","e":"pritamroy631@gmail.com"},{"n":"Dipanti Kumari","t":"Accountant","d":"Finance","l":"Siliguri","e":"sksinnikumari8@gmail.com"},{"n":"Benai Prasad","t":"Accountant","d":"Finance","l":"Siliguri","e":"binoyprasad12@gmail.com"},{"n":"Ananda M","t":"Deputy Manager - Accounts","d":"Finance","l":"Bengaluru","e":"ananda@tripfactory.com"},{"n":"Raghu N R","t":"Senior Accounts Executive","d":"Finance","l":"Bengaluru","e":"raghu.nr@tripfactory.com"},{"n":"Keerthi R","t":"Deputy Manager - Accounts","d":"Finance","l":"Bengaluru","e":"keerthi@tripfactory.com"},{"n":"Shashi Bansal","t":"Assistant Finance Manager","d":"Finance","l":"Bengaluru","e":"shashi@tripfactory.com"},{"n":"Vadde Raju","t":"Account Payables","d":"Finance","l":"Bengaluru","e":"raju.v@tripfactory.com"},{"n":"Mallana Gouda","t":"Accounts Manager","d":"Finance","l":"Bengaluru","e":""},{"n":"Sonu Chauhan","t":"Assistant Finance Manager","d":"Finance","l":"Delhi","e":"sonu.c@tripfactory.com"},{"n":"Keerthan A S","t":"Finance Executive","d":"Finance","l":"Bengaluru","e":""},{"n":"Akash Bhowmick","t":"Accountant","d":"Finance","l":"Siliguri","e":"ab935952@gmail.com"},{"n":"Abhilash K R","t":"Account Manager - IATA BSP Administrator","d":"Finance","l":"Bengaluru","e":"abhilash.kr@tripfactory.com"},{"n":"Jasvinder Singh","t":"Accounts Executive - DMC","d":"Finance","l":"Gurgaon","e":"jasvinder@tripfactory.com"},{"n":"Venkatesh B","t":"Accounts Manager","d":"Finance","l":"Bengaluru","e":"venkatesh.b@tripfactory.com"},{"n":"Srikanth S","t":"Assistant Manager - Accounts","d":"Finance","l":"Bengaluru","e":"srikanth.s@tripfactory.com"},{"n":"Ambika M S","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":"ambika.ms@tripfactory.com"},{"n":"Ubada Sukri","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":"ubada.s@tripfactory.com"},{"n":"Manoj T K","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":"manoj.tk@tripfactory.com"},{"n":"Vadde Siva Shankar","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":"sivashankar.v@tripfactory.com"},{"n":"Sumi Chanda","t":"Treasury Manager","d":"Finance","l":"Bengaluru","e":"sumi.c@tripfactory.com"},{"n":"Karan S Bhosle","t":"Finance - Intern","d":"Finance","l":"Bengaluru","e":"karan.s@tripfactory.com"},{"n":"Kaverappa N D","t":"Finance - Intern","d":"Finance","l":"Bengaluru","e":"kaverappa@tripfactory.com"},{"n":"Abhilash Dinesh","t":"Tax Executive","d":"Finance","l":"Bengaluru","e":"abhilash.d@tripfactory.com"},{"n":"Hemsagar H Badni","t":"Finance - Intern","d":"Finance","l":"Bengaluru","e":""},{"n":"Vicky Kumar Rana","t":"Finance - Intern","d":"Finance","l":"Bengaluru","e":"vicky.kr@tripfactory.com"},{"n":"Karthikeyan S","t":"Finance - Intern","d":"Finance","l":"Bengaluru","e":"karthikeyan@tripfactory.com"},{"n":"Arun Asokan","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":"arun.a@tripfactory.com"},{"n":"Hemavathi P S","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":"hemavathi@tripfactory.com"},{"n":"Flavia Patrick","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":""},{"n":"Vaishnavi ,","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":""},{"n":"Chandu Udarapu","t":"Junior MIS Executive","d":"Finance","l":"Bengaluru","e":"chandu.u@tripfactory.com"},{"n":"Ankush Kumar Bhadani","t":"Accounts Manager","d":"Finance","l":"Bengaluru","e":"ankush.kb@tripfactory.com"},{"n":"Agasthian V","t":"Accounts Executive","d":"Finance","l":"Bengaluru","e":"agasthian.v@tripfactory.com"},{"n":"Riddhi Ratilal Padiya","t":"Accounts Manager","d":"Finance","l":"Bengaluru","e":""},{"n":"Abhishek Mahesh","t":"Accounts Manager","d":"Finance","l":"Bengaluru","e":"m.abhishek@tripfactory.com"},{"n":"Puja Roy","t":"HR Executive","d":"HR & Admin","l":"Siliguri","e":"puja.r@tripfactory.travel"},{"n":"Agraharam Sriharsha Bhatt","t":"HR Executive","d":"HR & Admin","l":"Bengaluru","e":""},{"n":"Roshan V V","t":"Lead Talent Acquisition Specialist","d":"HR & Admin","l":"Bengaluru","e":""},{"n":"Annock Wesly S","t":"Talent Acquisition Specialist","d":"HR & Admin","l":"Bengaluru","e":"wesly@tripfactory.com"},{"n":"Krishna Prasad B P","t":"Asst Manager - HR Operations","d":"HR & Admin","l":"Bengaluru","e":"krishna.bp@tripfactory.com"},{"n":"Rakesh N","t":"Sr HR Executive","d":"HR & Admin","l":"Bengaluru","e":"rakesh.n@tripfactory.com"},{"n":"Eswara Rao Madugula","t":"Senior Manager - Payroll","d":"HR & Admin","l":"Bengaluru","e":"eswar.m@tripfactory.com"},{"n":"Pushpa M","t":"HR Executive","d":"HR & Admin","l":"Bengaluru","e":"pushpa.m@tripfactory.com"},{"n":"Sandhya Rani Gochhayat","t":"HR Executive","d":"HR & Admin","l":"Bengaluru","e":""},{"n":"Shveta Sood","t":"HR Executive","d":"HR & Admin","l":"Bengaluru","e":"shveta.s@tripfactory.travel"},{"n":"Pritisha Parekh","t":"HR Executive","d":"HR & Admin","l":"Bengaluru","e":"pritisha.p@tripfactory.travel"},{"n":"Sadhana Subba","t":"Talent Acquisition Specialist","d":"HR & Admin","l":"Siliguri","e":""},{"n":"Spurthi M N","t":"HR Executive","d":"HR & Admin","l":"Bengaluru","e":"spurthi.mn@tripfactory.travel"},{"n":"Ajay Kawa","t":"Global Business Development (BTO)","d":"Leadership","l":"London","e":"ajay.kawa@tripfactory.com"}];
+
+// ── ROLE DEFINITIONS (25 structural roles) ────────────────────────────────────
+var ROLES = [
+  // 1
+  {id:'cpso',t:'cpso',label:'Chief Product & Supply Officer',sub:'Sets strategy & decides activity',slots:1,
+   jd:['Sets overall commercial product and supply strategy','Decides destination activation based on business case','Approves all major contracts and supplier partnerships','Oversees MICE, Product and Connectivity divisions','Accountable for product revenue performance to CEO']},
+
+  // 2-4 DIRECTORS
+  {id:'dir-mice',t:'mice',label:'Director of MICE',sub:'Groups & Events',slots:1,
+   jd:['Leads all group and MICE product commercially','Manages Groups Managers for Europe and ROTW','Sets group contracting strategy and pricing standards','Drives new MICE destinations and corporate event product','Reports to Chief Product & Supply Officer']},
+  {id:'dir-prod',t:'dir',label:'Director of Product',sub:'All product regions',slots:1,
+   jd:['Manages all regional Product Managers day-to-day','Translates CPO strategy into regional team targets','Reviews and approves all supplier contracts before sign-off','Drives product quality, pricing benchmarks and SLAs','Leads 6 regional PM pillars and all support teams']},
+  {id:'dir-conn',t:'conn',label:'Director of Connectivity',sub:'Channel & API',slots:1,
+   jd:['Owns all technology connectivity — channel managers and APIs','Manages Head of Channel Manager and Head of API Connections','Ensures TF product distributed across all B2B and B2C channels','Drives new API partnerships to expand product inventory','Coordinates with Tech team on connectivity roadmap']},
+
+  // 5-6 MICE GMs
+  {id:'gm-eu',t:'mice',label:'Groups Manager — Europe',sub:'European groups & MICE',slots:1,
+   jd:['Manages European groups and MICE product sourcing','Contracts venues, hotels and activity providers for groups','Builds Europe group itineraries and event packages','Supports B2B clients with bespoke group requests','Reports to Director of MICE']},
+  {id:'gm-rotw',t:'mice',label:'Groups Manager — ROTW',sub:'Rest of World groups',slots:1,
+   jd:['Manages ROTW groups and MICE product sourcing','Contracts suppliers in Asia, Americas, Middle East for groups','Builds ROTW group itineraries and event programmes','Supports B2B clients with international group requests','Reports to Director of MICE']},
+
+  // 7-8 MICE CONTRACTORS
+  {id:'con-mice-eu',t:'con',label:'Contractor — Europe',sub:'MICE contracts',slots:1,
+   jd:['Loads and manages European MICE contracts in CAM system','Processes group venue and hotel agreements','Resolves contract queries with European MICE suppliers','Maintains group contract tracking and completion records','Reports to Groups Manager Europe']},
+  {id:'con-mice-rotw',t:'con',label:'Contractor — ROTW',sub:'MICE contracts',slots:1,
+   jd:['Loads and manages ROTW MICE contracts in CAM system','Processes international group venue and hotel agreements','Resolves contract queries with global MICE suppliers','Maintains group contract tracking and completion records','Reports to Groups Manager ROTW']},
+
+  // 9-14 PRODUCT MANAGERS
+  {id:'pm-eu',t:'pm',label:'PM — Europe',sub:'EU leisure · cities · MICE',slots:1,
+   jd:['Sources and negotiates all European product contracts','Always benchmarks to secure best commercial deal for TF','Manages European country partner relationships','Activates new European destinations on CPO business case','Monitors competitor pricing continuously and adjusts']},
+  {id:'pm-me',t:'pm',label:'PM — Middle East',sub:'UAE · Gulf · Jordan',slots:1,
+   jd:['Sources and contracts GCC and Middle East product','Negotiates group and FIT rates for best B2B value','Works with Dubai office on on-ground contracting activity','Tracks competitor pricing and adjusts product mix','Identifies new Gulf destinations to activate commercially']},
+  {id:'pm-sea',t:'pm',label:'PM — SE Asia & Pacific',sub:'Thailand · Bali · Pacific',slots:1,
+   jd:['Leads contracting across SE Asia and Pacific portfolio','Negotiates with hotels, activity operators and local DMCs','Ensures product availability and pricing competitiveness','Coordinates with in-country teams on quality and delivery','Drives content and product creation for the region']},
+  {id:'pm-ind',t:'pm',label:'PM — India & Subcontinent',sub:'India · Aus · NZ',slots:1,
+   jd:['Manages India subcontinent and Oceania product portfolio','Contracts hotels, activities and transport operators','Negotiates volume deals and preferred supplier agreements','Supports B2B sales with pricing and availability queries','Covers India, Australia, NZ and Pacific destinations']},
+  {id:'pm-usa',t:'pm',label:'PM — USA & South America',sub:'USA · Theme Parks · LatAm',slots:1,
+   jd:['Leads contracting across USA, Americas and Caribbean','Negotiates theme park packages and USA hotel contracts','Manages Latin America destination product and partners','Ensures rate competitiveness versus US-based OTAs','Activates new Americas destinations on approved business case']},
+  {id:'pm-din',t:'pm',label:'PM — Domestic India',sub:'North · South · Beach',slots:1,
+   jd:['Manages domestic India product portfolio end-to-end','Contracts Indian hotels, activities and transport operators','Negotiates volume deals and preferred supplier agreements','Supports B2B sales team with domestic pricing queries','Covers North India, South India and all beach destinations']},
+
+  // 15-20 CONTRACTOR GROUPS (one card per PM, shown as group)
+  {id:'con-eu',t:'con',label:'Contractors — Europe',sub:'Leisure · Cities · MICE (×3)',slots:3,
+   jd:['Load European leisure, city and MICE contracts in CAM','Process hotel, tour and venue agreements for Europe','Resolve contract queries with European suppliers','Maintain contract tracking and daily completion records','Report to Product Manager Europe']},
+  {id:'con-me',t:'con',label:'Contractors — Middle East',sub:'Gulf · UAE · ME (×3)',slots:3,
+   jd:['Load Middle East, UAE and Gulf contracts in CAM','Process hotel and activity agreements for ME region','Resolve contract queries with Gulf and ME suppliers','Maintain contract tracking and daily completion records','Report to Product Manager Middle East']},
+  {id:'con-sea',t:'con',label:'Contractors — SE Asia',sub:'Thailand · Bali · Asia (×3)',slots:3,
+   jd:['Load SE Asia hotel, tour and DMC contracts in CAM','Process agreements for Thailand, Bali and wider Asia','Resolve contract queries with Asian suppliers','Maintain contract tracking and daily completion records','Report to Product Manager SE Asia & Pacific']},
+  {id:'con-ind',t:'con',label:'Contractors — India & Sub',sub:'Aus · Pacific · NZ (×3)',slots:3,
+   jd:['Load Australia, Pacific and NZ contracts in CAM','Process hotel and activity agreements for Oceania','Resolve contract queries with Oceania suppliers','Maintain contract tracking and daily completion records','Report to Product Manager India & Subcontinent']},
+  {id:'con-usa',t:'con',label:'Contractors — USA & Americas',sub:'Theme Parks · USA · LatAm (×3)',slots:3,
+   jd:['Load USA, theme park and Latin America contracts in CAM','Process hotel, ticket and tour agreements for Americas','Resolve contract queries with American suppliers','Maintain contract tracking and daily completion records','Report to Product Manager USA & South America']},
+  {id:'con-din',t:'con',label:'Contractors — Domestic India',sub:'North · South · Beach (×3)',slots:3,
+   jd:['Load domestic India hotel and activity contracts in CAM','Process agreements for North, South and beach destinations','Resolve contract queries with Indian suppliers','Maintain contract tracking and daily completion records','Report to Product Manager Domestic India']},
+
+  // 21-22 CONNECTIVITY HEADS
+  {id:'hd-chan',t:'conn',label:'Head of Channel Manager',sub:'B2B & B2C distribution',slots:1,
+   jd:['Manages all channel manager integrations for distribution','Ensures TF product is live and bookable across B2B channels','Oversees Connectivity Admin team of 4','Resolves channel connectivity issues rapidly','Reports to Director of Connectivity']},
+  {id:'hd-api',t:'conn',label:'Head of API Connections',sub:'Direct API integrations',slots:1,
+   jd:['Manages all direct API integrations — Expedia Agoda GDS','Oversees Connectivity Tech Support team of 6','Ensures API product data is accurate and commercially live','Coordinates with Tech team on API reliability and roadmap','Reports to Director of Connectivity']},
+
+  // 23-24 CONNECTIVITY TEAMS
+  {id:'conn-admin',t:'conn',label:'Connectivity Admin',sub:'Channel admin support (×4)',slots:4,
+   jd:['Manages day-to-day channel manager administration','Processes channel connectivity updates and rate uploads','Monitors channel performance and availability','Flags channel issues to Head of Channel Manager promptly','Maintains channel admin tracker and weekly reporting']},
+  {id:'conn-tech',t:'conn',label:'Connectivity Tech Support',sub:'API technical support (×6)',slots:6,
+   jd:['Provides technical support for all API integrations','Resolves API data feed errors and system downtime','Processes API content mapping and validation tasks','Works with Tech team on API connectivity improvements','Reports all issues to Head of API Connections']},
+
+  // 25 — SUPPORT ROLES (6 roles, allocatable slots)
+  {id:'sup-mice-load',t:'sup',label:'Contract Loading',sub:'MICE division (×6)',slots:6,
+   jd:['Loads all MICE and group contracts into CAM system','Manages contract queue and audit pipeline for groups team','Resolves contract data queries with MICE suppliers','Maintains MICE contract tracking sheet and daily records','Reports to Director of MICE']},
+  {id:'sup-mice-cre',t:'sup',label:'Product Creation',sub:'MICE website team (×6)',slots:6,
+   jd:['Builds group and MICE packages on TF website platform','Creates itineraries and event product listings for groups','Ensures MICE product is live accurate and well-presented','Works from contracted rates to build competitive packages','Reports to Director of MICE']},
+  {id:'sup-mice-sales',t:'sup',label:'Group Sales Support',sub:'MICE quote assistance (×6)',slots:6,
+   jd:['Provides quote assistance for group and MICE enquiries','Handles custom group itinerary requests from B2B partners','Builds bespoke group packages on request from sales team','Maintains product knowledge across all MICE destinations','Reports to Director of MICE']},
+  {id:'sup-prod-load',t:'sup',label:'Contract Loading Team',sub:'Product division (×10)',slots:10,
+   jd:['Loads all product contracts into CAM system across all regions','Manages 2-7 contracts simultaneously through audit queue','Resolves contract queries with suppliers and negotiators','Maintains contract tracking sheet and daily completion records','Reports to Director of Product']},
+  {id:'sup-prod-cre',t:'sup',label:'Product Creation',sub:'Website team — Product (×10)',slots:10,
+   jd:['Builds tour packages and itineraries on TF website','Curates product content including descriptions and imagery','Works from contracted rates to create competitive packages','Ensures all products are live accurate and well-presented','Reports to Director of Product']},
+  {id:'sup-prod-sales',t:'sup',label:'Product Sales Support',sub:'Product division (×10)',slots:10,
+   jd:['Handles B2B product queries and custom itinerary requests','Provides fast and accurate quotation assistance to agents','Builds bespoke packages for key B2B accounts on request','Feeds demand signals back to Product Managers from sales','Reports to Director of Product']},
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var alloc = {};
+try{var _s=localStorage.getItem('comm_v5');if(_s)alloc=JSON.parse(_s);}catch(e){}
+var activeRole=null, activeSlot=null;
+
+function avCls(d){var m={Leadership:'aL',Product:'aP',Sales:'aS',Operations:'aO',Technology:'aT',Finance:'aF','HR & Admin':'aH'};return m[d]||'aX';}
+function ini(n){return(n||'').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase();}
+function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;}
+function R(id){return ROLES.find(function(r){return r.id===id;});}
+
+// ── CARD ─────────────────────────────────────────────────────────────────────
+function buildCard(role){
+  var c=el('div','card t-'+role.t);
+  var hd=el('div','card-hd');
+  var tw=el('div');tw.style.flex='1';
+  tw.appendChild(el('div','ctitle',role.label));
+  if(role.sub)tw.appendChild(el('div','csub',role.sub));
+  var jw=el('div','jd-wrap');
+  var jb=el('button','jd-btn','i');
+  var jt=el('div','jd-tip');
+  var jh='<b>'+role.label+'</b><ul>';
+  role.jd.forEach(function(j){jh+='<li>'+j+'</li>';});
+  jt.innerHTML=jh+'</ul>';
+  jw.appendChild(jb);jw.appendChild(jt);
+  hd.appendChild(tw);hd.appendChild(jw);c.appendChild(hd);
+  var sc=el('div','slots');
+  var ppl=(alloc[role.id]||[]).filter(Boolean);
+  var show=Math.max(role.slots,ppl.length);
+  for(var i=0;i<show;i++)buildSlot(sc,role,i,ppl[i]||null);
+  var am=el('div','addslot','+ Add');
+  (function(r,len){am.onclick=function(){openModal(r.id,len);};})(role,ppl.length);
+  sc.appendChild(am);c.appendChild(sc);
+  return c;
+}
+
+function buildSlot(container,role,idx,person){
+  var sl=el('div','slot'+(person?' filled':''));
+  sl.appendChild(el('span','snum',String(idx+1)));
+  if(person){
+    var inf=el('div','sinfo');
+    inf.appendChild(el('div','sname',person.n));
+    inf.appendChild(el('div','stitle',(person.t||'')+(person.l?' · '+person.l:'')));
+    var x=el('button','sx','×');
+    (function(rid,i){x.onclick=function(e){e.stopPropagation();rmv(rid,i);};})(role.id,idx);
+    sl.appendChild(inf);sl.appendChild(x);
+  }else{
+    sl.appendChild(el('span','sempty','Click to assign'));
+    (function(rid,i){sl.onclick=function(){openModal(rid,i);};})(role.id,idx);
+  }
+  container.appendChild(sl);
+}
+
+// ── TREE ─────────────────────────────────────────────────────────────────────
+var CW=130, GAP=8;
+
+function vl(){return el('div','vline');}
+
+function hbar(n){
+  // horizontal connector bar spanning n cards
+  var total=n*CW+(n-1)*GAP;
+  var wrap=el('div','hbar');
+  wrap.style.cssText='position:relative;height:14px;width:'+total+'px;flex-shrink:0';
+  if(n<2){
+    var v2=el('div');v2.style.cssText='width:2px;height:14px;background:#c5cdd9;margin:0 auto';
+    wrap.appendChild(v2);return wrap;
+  }
+  var line=el('div');line.style.cssText='position:absolute;top:0;left:0;right:0;height:2px;background:#c5cdd9';
+  wrap.appendChild(line);
+  for(var i=0;i<n;i++){
+    var d=el('div');
+    d.style.cssText='position:absolute;top:0;width:2px;height:14px;background:#c5cdd9;left:'+(i*(CW+GAP)+Math.floor(CW/2))+'px';
+    wrap.appendChild(d);
+  }
+  return wrap;
+}
+
+function colOf(arr){
+  var c=el('div');c.style.cssText='display:flex;flex-direction:column;align-items:center';
+  arr.forEach(function(ch){c.appendChild(ch);});return c;
+}
+
+function rowOf(ids){
+  var r=el('div');r.style.cssText='display:flex;gap:'+GAP+'px;align-items:flex-start;justify-content:center';
+  ids.forEach(function(id){r.appendChild(buildCard(R(id)));});return r;
+}
+
+function buildTree(){
+  var tv=document.getElementById('tree-view');
+  tv.innerHTML='';
+
+  // ── LAYOUT: CPSO on top, then 3 column sections side by side ─────────────
+  // Each section has its Director at top, children below.
+  // CPSO sits above all 3 with a connector spanning full width.
+
+  var OUTER_GAP = GAP*4; // 32px between sections
+
+  // ── MICE section ──────────────────────────────────────────────────────────
+  var miceCol=el('div');miceCol.style.cssText='display:flex;flex-direction:column;align-items:center';
+  miceCol.appendChild(buildCard(R('dir-mice')));
+  miceCol.appendChild(vl());
+  miceCol.appendChild(hbar(2));
+  var gmRow=el('div');gmRow.style.cssText='display:flex;gap:'+GAP+'px';
+  gmRow.appendChild(colOf([buildCard(R('gm-eu')),vl(),buildCard(R('con-mice-eu'))]));
+  gmRow.appendChild(colOf([buildCard(R('gm-rotw')),vl(),buildCard(R('con-mice-rotw'))]));
+  miceCol.appendChild(gmRow);
+  miceCol.appendChild(vl());
+  var msBand=el('div');msBand.style.cssText='display:flex;gap:6px;justify-content:center';
+  ['sup-mice-load','sup-mice-cre','sup-mice-sales'].forEach(function(id){msBand.appendChild(buildCard(R(id)));});
+  miceCol.appendChild(msBand);
+
+  // ── PRODUCT section ───────────────────────────────────────────────────────
+  var prodCol=el('div');prodCol.style.cssText='display:flex;flex-direction:column;align-items:center';
+  prodCol.appendChild(buildCard(R('dir-prod')));
+  prodCol.appendChild(vl());
+  prodCol.appendChild(hbar(6));
+  var pmIds=['pm-eu','pm-me','pm-sea','pm-ind','pm-usa','pm-din'];
+  var conIds=['con-eu','con-me','con-sea','con-ind','con-usa','con-din'];
+  var pmConRow=el('div');pmConRow.style.cssText='display:flex;gap:'+GAP+'px;align-items:flex-start';
+  pmIds.forEach(function(pmId,i){
+    pmConRow.appendChild(colOf([buildCard(R(pmId)),vl(),buildCard(R(conIds[i]))]));
+  });
+  prodCol.appendChild(pmConRow);
+  prodCol.appendChild(vl());
+  var psBand=el('div');psBand.style.cssText='display:flex;gap:6px;justify-content:center';
+  ['sup-prod-load','sup-prod-cre','sup-prod-sales'].forEach(function(id){psBand.appendChild(buildCard(R(id)));});
+  prodCol.appendChild(psBand);
+
+  // ── CONNECTIVITY section ──────────────────────────────────────────────────
+  var connCol=el('div');connCol.style.cssText='display:flex;flex-direction:column;align-items:center';
+  connCol.appendChild(buildCard(R('dir-conn')));
+  connCol.appendChild(vl());
+  connCol.appendChild(hbar(2));
+  var connRow=el('div');connRow.style.cssText='display:flex;gap:'+GAP+'px';
+  connRow.appendChild(colOf([buildCard(R('hd-chan')),vl(),buildCard(R('conn-admin'))]));
+  connRow.appendChild(colOf([buildCard(R('hd-api')),vl(),buildCard(R('conn-tech'))]));
+  connCol.appendChild(connRow);
+
+  // ── ASSEMBLE t3 ───────────────────────────────────────────────────────────
+  var t3=el('div');t3.style.cssText='display:flex;gap:'+OUTER_GAP+'px;justify-content:center;align-items:flex-start;margin-top:0';
+
+  t3.appendChild(miceCol);
+  t3.appendChild(prodCol);
+  t3.appendChild(connCol);
+
+  // CPSO + spanning connector above t3
+  // We use a post-render measurement via requestAnimationFrame
+  var wrapper=el('div');wrapper.style.cssText='display:flex;flex-direction:column;align-items:center';
+  var cpsoCard=buildCard(R('cpso'));
+  var cpsoVl=vl();
+  wrapper.appendChild(cpsoCard);
+  wrapper.appendChild(cpsoVl);
+
+  // Placeholder for the top hbar — we'll size it after t3 is in DOM
+  var topBar=el('div');topBar.style.cssText='height:14px;position:relative';
+  wrapper.appendChild(topBar);
+  wrapper.appendChild(t3);
+  tv.appendChild(wrapper);
+
+  // After render, measure t3 and size the top connector bar
+  requestAnimationFrame(function(){
+    var t3W=t3.offsetWidth;
+    var cpsoW=cpsoCard.offsetWidth;
+    // horizontal bar spanning t3 width
+    topBar.style.width=t3W+'px';
+    var tl=el('div');tl.style.cssText='position:absolute;top:0;left:0;right:0;height:2px;background:#c5cdd9';
+    topBar.appendChild(tl);
+    // drops at centre of each section (MICE, Product, Conn)
+    var miceW=2*CW+GAP, prodW=6*CW+5*GAP, connW=2*CW+GAP;
+    var centers=[
+      miceW/2,
+      miceW+OUTER_GAP+prodW/2,
+      miceW+OUTER_GAP+prodW+OUTER_GAP+connW/2
+    ];
+    centers.forEach(function(cx){
+      var d=el('div');d.style.cssText='position:absolute;top:0;width:2px;height:14px;background:#c5cdd9;left:'+Math.round(cx-1)+'px';
+      topBar.appendChild(d);
+    });
+    applyScale();
+  });
+  updateCount();
+}
+
+// ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
+function applyScale(){
+  var wrap=document.getElementById('scale-wrap');
+  var vw=window.innerWidth;
+  var treeW=document.getElementById('tree-view').scrollWidth;
+  var available=vw-32; // padding
+  if(treeW>available){
+    var s=Math.max(0.55,available/treeW);
+    wrap.style.transform='scale('+s.toFixed(3)+')';
+    wrap.style.width=(treeW)+'px';
+    wrap.style.marginLeft='auto';
+    wrap.style.marginRight='auto';
+    // adjust canvas height to scaled content
+    var canvas=document.getElementById('canvas');
+    canvas.style.justifyContent='flex-start';
+  }else{
+    wrap.style.transform='';
+    wrap.style.width='';
+  }
+}
+window.addEventListener('resize',applyScale);
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(roleId,slotIdx){
+  activeRole=roleId;activeSlot=slotIdx;
+  var role=R(roleId);
+  document.getElementById('m-title').textContent='Assign: '+role.label;
+  document.getElementById('m-sub').textContent='Slot '+(slotIdx+1);
+  document.getElementById('m-q').value='';
+  document.getElementById('m-dept').value=document.getElementById('tb-dept').value||'';
+  document.getElementById('m-loc').value='';
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('m-q').focus();
+  mSearch();
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');activeRole=null;activeSlot=null;}
+
+function mSearch(){
+  var q=(document.getElementById('m-q').value||'').toLowerCase();
+  var dept=document.getElementById('m-dept').value;
+  var loc=(document.getElementById('m-loc').value||'').toLowerCase();
+  var used={};
+  Object.keys(alloc).forEach(function(k){(alloc[k]||[]).filter(Boolean).forEach(function(p){used[p.n]=true;});});
+  var res=STAFF.filter(function(s){
+    if(used[s.n])return false;
+    if(dept&&s.d!==dept)return false;
+    if(loc&&(s.l||'').toLowerCase().indexOf(loc)===-1)return false;
+    if(!q)return true;
+    return[s.n,s.t,s.d,s.l].some(function(v){return v&&v.toLowerCase().indexOf(q)!==-1;});
+  }).slice(0,80);
+  var list=document.getElementById('m-list');list.innerHTML='';
+  res.forEach(function(s){
+    var it=el('div','mitem');
+    var av=el('div','mav '+avCls(s.d),ini(s.n));
+    var info=el('div');
+    info.appendChild(el('div','mname',s.n));
+    info.appendChild(el('div','msub2',(s.t||'')+(s.l?' · '+s.l:'')));
+    it.appendChild(av);it.appendChild(info);
+    (function(staff){it.onclick=function(){assign(staff);};})(s);
+    list.appendChild(it);
+  });
+  document.getElementById('m-count').textContent=res.length+' people'+(res.length===80?' (refine search)':'');
+}
+
+function assign(s){
+  if(!activeRole)return;
+  if(!alloc[activeRole])alloc[activeRole]=[];
+  while(alloc[activeRole].length<=activeSlot)alloc[activeRole].push(null);
+  alloc[activeRole][activeSlot]=s;
+  closeModal();buildTree();
+}
+function rmv(rid,idx){if(alloc[rid])alloc[rid].splice(idx,1);buildTree();}
+function clearAll(){if(confirm('Clear all allocations?')){alloc={};buildTree();}}
+function saveAlloc(){
+  try{localStorage.setItem('comm_v5',JSON.stringify(alloc));}catch(e){}
+  var b=document.getElementById('save-btn');
+  b.textContent='\u2713 Saved';
+  setTimeout(function(){b.textContent='\uD83D\uDCBE Save';},1800);
+}
+function updateCount(){
+  var f=0,t=0;
+  ROLES.forEach(function(r){t+=r.slots;f+=(alloc[r.id]||[]).filter(Boolean).length;});
+  document.getElementById('role-count').textContent=f+'/'+t+' filled';
+  document.getElementById('fill-count').textContent=f+'/'+t+' filled';
+}
+
+// ── SUMMARY ───────────────────────────────────────────────────────────────────
+var SECS=[
+  {lbl:'Chief Product & Supply Officer',col:'#92700A',ids:['cpso']},
+  {lbl:'MICE Division',col:'#991B1B',ids:['dir-mice','gm-eu','gm-rotw','con-mice-eu','con-mice-rotw']},
+  {lbl:'Product Division — Directors & PMs',col:'#0D1B2A',ids:['dir-prod','pm-eu','pm-me','pm-sea','pm-ind','pm-usa','pm-din']},
+  {lbl:'Product Division — Contractors',col:'#0B6E4F',ids:['con-eu','con-me','con-sea','con-ind','con-usa','con-din']},
+  {lbl:'Connectivity Division',col:'#1E40AF',ids:['dir-conn','hd-chan','hd-api','conn-admin','conn-tech']},
+  {lbl:'MICE Support Teams',col:'#D97706',ids:['sup-mice-load','sup-mice-cre','sup-mice-sales']},
+  {lbl:'Product Support Teams',col:'#B45309',ids:['sup-prod-load','sup-prod-cre','sup-prod-sales']},
+];
+function renderSummary(){
+  var sv=document.getElementById('summary-view');sv.innerHTML='';
+  SECS.forEach(function(sec){
+    var div=el('div','ssec');
+    var hd=el('div','sshd',sec.lbl);hd.style.background=sec.col;div.appendChild(hd);
+    sec.ids.forEach(function(id){
+      var role=R(id);if(!role)return;
+      var ppl=(alloc[id]||[]).filter(Boolean);
+      var show=Math.max(role.slots,ppl.length,1);
+      for(var i=0;i<show;i++){
+        var row2=el('div','ssrow');
+        row2.appendChild(el('div','ssrole',role.label));
+        if(ppl[i]){
+          var nm=el('div');nm.style.flex='1';
+          nm.innerHTML='<span class="ssname">'+ppl[i].n+'</span><span style="font-size:9px;color:#9ca3af"> &middot; '+(ppl[i].t||'')+(ppl[i].l?' &middot; '+ppl[i].l:'')+'</span>';
+          row2.appendChild(nm);
+        }else{
+          var em=el('div','ssempty','Vacant');em.style.flex='1';row2.appendChild(em);
+        }
+        div.appendChild(row2);
+      }
+    });
+    sv.appendChild(div);
+  });
+}
+
+function setView(v){
+  document.getElementById('tree-view').style.display=v==='tree'?'':'none';
+  document.getElementById('summary-view').style.display=v==='summary'?'block':'none';
+  document.getElementById('btn-tree').className='vbtn'+(v==='tree'?' on':'');
+  document.getElementById('btn-sum').className='vbtn'+(v==='summary'?' on':'');
+  if(v==='summary')renderSummary();
+  else applyScale();
+}
+
+buildTree();
+</script>
+</body>
+</html>
