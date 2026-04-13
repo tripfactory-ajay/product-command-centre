@@ -293,6 +293,160 @@ tr:hover td{background:#f8fafc}
 
 .lp-fx-card{cursor:pointer}
 #fx-widget iframe{max-width:100%}
+
+/* ═══════════════════════════════════════════════════
+   DARK THEME OVERRIDE — All internal pages
+   Black background, white text throughout
+═══════════════════════════════════════════════════ */
+
+/* Root colour overrides */
+body{background:#000!important;color:#fff!important}
+:root{
+  --bg:#000;--border:rgba(255,255,255,.1);--text:#fff;--muted:rgba(255,255,255,.5);
+  --navy:#fff;--navy2:rgba(255,255,255,.8)
+}
+
+/* App shell */
+.scroll{background:#000}
+#main{background:#000}
+
+/* Cards and containers */
+.card{background:#111!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:none!important}
+.card h3{color:#fff!important}
+.twrap{background:#111!important;border:1px solid rgba(255,255,255,.1)!important}
+.slider-wrap{background:#111!important;border:1px solid rgba(255,255,255,.1)!important}
+.result-box{background:#1a1a1a!important}
+.info-banner{background:#111!important;border:1px solid rgba(255,255,255,.1)!important}
+.inline-form{background:#111!important;border:1px solid rgba(255,255,255,.1)!important}
+.upload-zone{background:#0a0a0a!important;border-color:rgba(255,255,255,.15)!important}
+.upload-zone:hover,.upload-zone.drag-over{background:#111!important;border-color:var(--sky)!important}
+
+/* Stat cards */
+.sc{background:#111!important;border:1px solid rgba(255,255,255,.1)!important}
+.sc-l{color:rgba(255,255,255,.5)!important}
+.sc-v{color:#fff!important}
+.sc-s{color:rgba(255,255,255,.4)!important}
+
+/* Typography */
+h3{color:#fff!important}
+.phd h2{color:#fff!important}
+.phd p{color:rgba(255,255,255,.5)!important}
+.rb-v{color:#fff!important}
+.rb-l{color:rgba(255,255,255,.4)!important}
+.ib-v{color:#fff!important}
+.ib-l{color:rgba(255,255,255,.4)!important}
+.atxt{color:#fff!important}
+.atm{color:rgba(255,255,255,.4)!important}
+.tcnt{color:rgba(255,255,255,.4)!important}
+.slider-row label{color:rgba(255,255,255,.6)!important}
+.slider-val{color:#fff!important}
+.upload-zone-txt{color:#fff!important}
+.upload-zone-sub{color:rgba(255,255,255,.4)!important}
+
+/* Tables */
+th{background:#1a1a1a!important;color:rgba(255,255,255,.7)!important}
+td{color:#fff!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
+tr:hover td{background:#1a1a1a!important}
+
+/* Table bars and headers */
+.ttbar{background:#111!important;border-bottom:1px solid rgba(255,255,255,.1)!important}
+.ttbar span{color:#fff!important}
+
+/* Inputs */
+.tsrch{background:#111!important;border:1px solid rgba(255,255,255,.15)!important;color:#fff!important}
+.tsrch::placeholder{color:rgba(255,255,255,.3)!important}
+.tsrch:focus{border-color:var(--sky)!important}
+.tsel{background:#111!important;border:1px solid rgba(255,255,255,.15)!important;color:#fff!important}
+.ff input,.ff select,.ff textarea{background:#111!important;border:1px solid rgba(255,255,255,.15)!important;color:#fff!important}
+.ff input::placeholder,.ff textarea::placeholder{color:rgba(255,255,255,.3)!important}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--sky)!important;background:#1a1a1a!important}
+.ff label{color:rgba(255,255,255,.5)!important}
+select option{background:#111;color:#fff}
+
+/* Sub-tabs */
+.stab{background:transparent!important;border:1px solid rgba(255,255,255,.1)!important;color:rgba(255,255,255,.5)!important}
+.stab:hover{background:#1a1a1a!important;color:#fff!important}
+.stab.on{background:#fff!important;color:#000!important;border-color:#fff!important}
+
+/* Back button */
+.back-btn{background:#111!important;border:1px solid rgba(255,255,255,.15)!important;color:rgba(255,255,255,.8)!important}
+.back-btn:hover{border-color:var(--sky)!important;color:var(--sky)!important}
+
+/* Quick links */
+.ql.b{background:rgba(0,168,232,.15)!important;color:#7dd3f8!important;border:1px solid rgba(0,168,232,.25)!important}
+.ql.g{background:rgba(59,181,74,.12)!important;color:#86efac!important;border:1px solid rgba(59,181,74,.2)!important}
+.ql.y{background:rgba(245,197,24,.12)!important;color:#fde047!important;border:1px solid rgba(245,197,24,.2)!important}
+.ql.r{background:rgba(224,58,47,.12)!important;color:#fca5a5!important;border:1px solid rgba(224,58,47,.2)!important}
+.ql.p{background:rgba(155,89,182,.12)!important;color:#d8b4fe!important;border:1px solid rgba(155,89,182,.2)!important}
+.ql{border-radius:7px!important}
+
+/* Activity dots border */
+.act{border-bottom:1px solid rgba(255,255,255,.07)!important}
+
+/* File items */
+.file-item{background:#111!important;border:1px solid rgba(255,255,255,.1)!important}
+.file-item-name{color:#fff!important}
+.file-item-size{color:rgba(255,255,255,.4)!important}
+.file-item-del{color:rgba(255,255,255,.3)!important}
+.file-item-del:hover{background:rgba(224,58,47,.2)!important;color:#fca5a5!important}
+
+/* UAE action items */
+.uae-action-item{background:#111!important;border-color:rgba(255,255,255,.1)!important}
+.uae-action-item.urgent{background:#1a0000!important;border-color:rgba(224,58,47,.3)!important}
+.uae-action-item.high{background:#111100!important;border-color:rgba(245,197,24,.2)!important}
+.uae-action-item.normal{background:#001100!important;border-color:rgba(59,181,74,.2)!important}
+.uae-contact-item{background:#111!important;border:1px solid rgba(255,255,255,.1)!important}
+
+/* Priority badges */
+.pri-badge.pri-urgent{background:rgba(224,58,47,.2)!important;color:#fca5a5!important}
+.pri-badge.pri-high{background:rgba(245,197,24,.15)!important;color:#fde047!important}
+.pri-badge.pri-normal{background:rgba(59,181,74,.12)!important;color:#86efac!important}
+
+/* CAM team styles */
+.dsb{background:#111!important;border-right:1px solid rgba(255,255,255,.1)!important}
+.tsrch2{background:#111!important;border:1px solid rgba(255,255,255,.15)!important;color:#fff!important}
+
+/* Topbar */
+.topbar{background:#000!important;border-bottom:1px solid rgba(255,255,255,.1)!important}
+.tbt{color:rgba(255,255,255,.6)!important}
+.ub{color:rgba(255,255,255,.5)!important}
+
+/* two-column grid cards */
+.two .card{background:#111!important}
+
+
+/* ── GREY TEXT → WHITE (all remaining grey/muted text) ── */
+*{color:inherit}
+.muted,.sc-s,.sc-l,.phd p,.atm,.tcnt,.rb-l,.ib-l,.slider-row label,
+.upload-zone-sub,.file-item-size,.hac-time,.lp-col-hd,.lp-card-desc,
+.lp-eyebrow,.lp-sub,.lp-kl,.ff label,.tbt,.ub,.notes-col,
+[style*="color:var(--muted)"],[style*="color:#6b7a99"],[style*="color:rgba(255,255,255,.3)"],
+[style*="color:rgba(255,255,255,.27)"],[style*="color:rgba(255,255,255,.28)"],
+[style*="color:rgba(255,255,255,.35)"],[style*="color:rgba(255,255,255,.38)"],
+[style*="color:rgba(255,255,255,.45)"]{color:rgba(255,255,255,.85)!important}
+td[style*="color:var(--muted)"],td[style*="color:#"],span[style*="color:var(--muted)"]{color:rgba(255,255,255,.85)!important}
+.sc-l{color:rgba(255,255,255,.7)!important}
+.sc-s{color:rgba(255,255,255,.6)!important}
+.phd p{color:rgba(255,255,255,.7)!important}
+.atm{color:rgba(255,255,255,.6)!important}
+.tcnt{color:rgba(255,255,255,.6)!important}
+.rb-l{color:rgba(255,255,255,.65)!important}
+.ib-l{color:rgba(255,255,255,.65)!important}
+.upload-zone-sub{color:rgba(255,255,255,.65)!important}
+.file-item-size{color:rgba(255,255,255,.65)!important}
+.lp-card-desc{color:rgba(255,255,255,.7)!important}
+.lp-sub{color:#fff!important}
+.lp-kl{color:rgba(255,255,255,.8)!important}
+.lp-eyebrow{color:rgba(0,168,232,.9)!important}
+.ff label{color:rgba(255,255,255,.75)!important}
+.slider-row label{color:rgba(255,255,255,.8)!important}
+.notes-col{color:rgba(255,255,255,.75)!important}
+.hac-time{color:rgba(255,255,255,.6)!important}
+.lp-col-hd{color:#fff!important}
+/* Table muted cells */
+td{color:#fff!important}
+.tcnt,.sc-l{color:rgba(255,255,255,.75)!important}
+
 </style>
 </head>
 <body>
