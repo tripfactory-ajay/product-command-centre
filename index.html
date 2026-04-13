@@ -289,7 +289,7 @@ tr:hover td{background:#f8fafc}
 
 /* Override: home page black */
 #pg-home{background:#000!important}
-#pg-home .scroll{background:#000!important;padding:0!important}
+#pg-home .scroll{background:#000}
 
 .lp-fx-card{cursor:pointer}
 #fx-widget iframe{max-width:100%}
@@ -451,7 +451,6 @@ td{color:#fff!important}
 /* ══ DARK THEME OVERRIDE ════════════════════════════════ */
 body{background:#000!important;color:#fff!important}
 :root{--bg:#000;--border:rgba(255,255,255,.1);--text:#fff;--muted:rgba(255,255,255,.6);--navy:#fff;--navy2:rgba(255,255,255,.8)}
-.scroll{background:#000}
 #main{background:#000}
 .card{background:#111!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:none!important}
 .card h3{color:#fff!important}
@@ -496,7 +495,7 @@ tr:hover td{background:#1a1a1a!important}
 .ff label{color:rgba(255,255,255,.7)!important}
 select option{background:#111;color:#fff}
 #pg-home{background:#000!important}
-#pg-home .scroll{background:#000!important;padding:0!important}
+#pg-home 
 
 /* ══ NEW SECTIONS ════════════════════════════════════════ */
 .dk-sec{background:#111;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 18px;margin-bottom:12px}
@@ -581,6 +580,22 @@ select option{background:#111;color:#fff}
 .mini-stat.grn{border-top:3px solid #3bb54a;background:rgba(59,181,74,.05)}
 .mini-stat.sky{border-top:3px solid #00a8e8;background:rgba(0,168,232,.05)}
 
+
+/* ── New section pages: ensure correct layout ── */
+#pg-mkt-request .scroll,#pg-suppliers .scroll,#pg-calculator .scroll,
+#pg-escalations .scroll,#pg-destinations .scroll,#pg-kpis 
+/* dk-row compound selectors */
+.dk-row.c2{grid-template-columns:1fr 1fr!important}
+.dk-row.c3{grid-template-columns:1fr 1fr 1fr!important}
+.dk-row.c4{grid-template-columns:1fr 1fr 1fr 1fr!important}
+/* Make sure dk-grid is 2 col on new pages */
+#pg-mkt-request .dk-grid{grid-template-columns:1fr 1fr}
+/* calc grid fix */
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+/* dest grid */
+.dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+/* mini-stats */
+.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 </style>
 
   <!-- Firebase -->
