@@ -1343,33 +1343,7 @@ body{max-width:none!important;margin:0!important;width:100%!important}
   </div>
 </div>
 
-<script>
-// ── DIAGNOSTIC — run window.ornDiag() in console to test ──
-window.ornDiag = function(){
-  console.log('=== ORN HUB DIAGNOSTIC ===');
-  console.log('db:', db ? '✅ connected' : '❌ null');
-  console.log('CU (current user):', CU ? CU.name : '❌ not logged in');
-  console.log('SEED_SUPPLIERS:', typeof SEED_SUPPLIERS !== 'undefined' ? SEED_SUPPLIERS.length+' records' : '❌ undefined');
-  console.log('SC_DATA keys:', Object.keys(SC_DATA||{}).length);
-  if(db){
-    db.ref('hub/suppliers').once('value').then(function(s){
-      console.log('Firebase /hub/suppliers:', s.val() ? Object.keys(s.val()).length+' records' : 'EMPTY or BLOCKED');
-    }).catch(function(e){
-      console.error('Firebase read BLOCKED:', e.message, '— Check database rules!');
-    });
-    db.ref('hub/test_write').set({t: Date.now()}).then(function(){
-      console.log('Firebase WRITE: ✅ working');
-      db.ref('hub/test_write').remove();
-    }).catch(function(e){
-      console.error('Firebase WRITE BLOCKED:', e.message, '— Rules need: ".write": true');
-    });
-  }
-};
-// Auto-run after 3 seconds
-setTimeout(function(){
-  if(typeof CU !== 'undefined' && CU) window.ornDiag();
-}, 3000);
-// ── Firebase init — waits for SDK then connects ────────────
+<script>// ── Firebase init — waits for SDK then connects ────────────
 var db = null;
 var FB_CONFIG = {
   apiKey: "AIzaSyCJXOlSMyFlrcnQ2air1h1dbhFqLxXzOdI",
@@ -1380,24 +1354,19 @@ var FB_CONFIG = {
   messagingSenderId: "25736842668",
   appId: "1:25736842668:web:754f9cf6268e2a5552fe09"
 };
-function initFirebase() {
-  try {
-    if (typeof firebase === 'undefined') {
-      setTimeout(initFirebase, 300);
-      return;
-    }
-    if (!firebase.apps || firebase.apps.length === 0) {
-      firebase.initializeApp(FB_CONFIG);
-    }
-    db = firebase.database();
-    console.log('✅ Firebase connected — orn-wiki');
-    if (typeof wireExistingFB === 'function') wireExistingFB();
-    if (typeof initSeedSuppliers === 'function') setTimeout(initSeedSuppliers, 2000);
-    if (typeof initSeedDestinations === 'function') setTimeout(initSeedDestinations, 3000);
-  } catch(e) {
-    console.warn('Firebase init error:', e.code, e.message);
-    if (e.code === 'app/duplicate-app') {
-      try { db = firebase.database(); if (typeof wireExistingFB === 'function') wireExistingFB(); } catch(e2){}
+function initFirebase(){
+  try{
+    if(typeof firebase==='undefined'){setTimeout(initFirebase,300);return;}
+    if(!firebase.apps||firebase.apps.length===0){firebase.initializeApp(FB_CONFIG);}
+    db=firebase.database();
+    console.log('Firebase connected — orn-wiki');
+    if(typeof wireExistingFB==='function')wireExistingFB();
+    if(typeof initSeedSuppliers==='function')setTimeout(initSeedSuppliers,2000);
+    if(typeof initSeedDestinations==='function')setTimeout(initSeedDestinations,3000);
+  }catch(e){
+    console.warn('Firebase error:',e.code,e.message);
+    if(e.code==='app/duplicate-app'){
+      try{db=firebase.database();if(typeof wireExistingFB==='function')wireExistingFB();}catch(e2){}
     }
   }
 }
@@ -1493,7 +1462,7 @@ window.renderMktList = function(){
   var cnt = document.getElementById('mr-count');
   if(!el) return;
   if(!db){
-    el.innerHTML = '<div style="font-size:.78rem;color:rgba(255,255,255,.4);padding:12px 0">Connecting to database...</div>';
+    el.innerHTML = '<div style="font-size:.78rem;color:#6b7a99;padding:12px 0">Connecting to database...</div>';
     setTimeout(function(){if(window.renderMktList) window.renderMktList();}, 1000);
     return;
   }
@@ -2398,7 +2367,41 @@ function postRegionalUpdate(){
   var form=document.getElementById('regional-form-card');
   if(form)form.style.display='none';
 }
-function renderRegional(){var el=document.getElementById('rg-tbody');if(!el)return;var q=(document.getElementById('rg-search')||{}).value||'';var df=(document.getElementById('rg-dept-filter')||{}).value||'';var rf=(document.getElementById('rg-region-filter')||{}).value||'';var ao=!!(document.getElementById('rg-actions-only')&&document.getElementById('rg-actions-only').checked);var updates=REGIONAL_UPDATES.filter(function(u){return(!q||(u.subject||'').toLowerCase().includes(q.toLowerCase())||(u.from||'').toLowerCase().includes(q.toLowerCase()))&&(!df||u.dept===df)&&(!rf||u.region===rf)&&(!ao||u.actionRequired);});if(!updates.length){el.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:14px">No updates yet — click + Post Update</td></tr>';}else{el.innerHTML=updates.map(function(u){var pc={urgent:'pri-urgent',high:'pri-high',normal:'pri-normal'};return'<tr><td style="font-size:.72rem;color:var(--muted);white-space:nowrap">'+u.date+'</td><td style="font-weight:700">'+u.from+'</td><td style="font-size:.73rem">'+u.dept+'</td><td style="font-size:.73rem">'+u.region+'</td><td style="font-weight:600">'+u.subject+'</td><td style="font-size:.72rem;color:var(--muted)">'+u.notes+'</td><td style="font-size:.72rem;color:var(--red)">'+u.actions+'</td><td><span class="pri-badge '+(pc[u.priority]||'pri-normal')+'">'+u.priority+'</span>'+(u.actionRequired?'<span style="font-size:.62rem;background:#fce8e8;color:var(--red);padding:1px 5px;border-radius:4px;margin-left:3px;font-weight:700">!</span>':'')+'</td><td><input type="checkbox"'+(u.done?' checked':'')+' onchange="markRGDone('+u.id+',this.checked)"></td></tr>';}).join('');}var cc=document.getElementById('rg-count');if(cc)cc.textContent=updates.length+' updates';}
+function renderRegional(){
+  var el=document.getElementById('rg-tbody');
+  if(!el)return;
+  var q=(document.getElementById('rg-search')||{}).value||'';
+  var df=(document.getElementById('rg-dept-filter')||{}).value||'';
+  var rf=(document.getElementById('rg-region-filter')||{}).value||'';
+  var ao=(document.getElementById('rg-actions-only')||{}).checked;
+  var priCls={'urgent':'s-crit','high':'s-high','normal':'s-norm'};
+  var updates=REGIONAL_UPDATES.filter(function(u){
+    var txt=(u.subject||'')+(u.from||'')+(u.notes||'');
+    return(!q||txt.toLowerCase().indexOf(q.toLowerCase())>=0)
+      &&(!df||u.dept===df)&&(!rf||u.region===rf)&&(!ao||u.actionRequired);
+  });
+  var cnt=document.getElementById('rg-count');
+  if(cnt)cnt.textContent=updates.length+' update'+(updates.length===1?'':'s');
+  if(!updates.length){
+    el.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7a99;font-size:.82rem">No updates yet. Click <strong>+ Post Update</strong> to add one.</td></tr>';
+    return;
+  }
+  var html='';
+  updates.forEach(function(u){
+    var priCl=priCls[u.priority||'normal']||'s-norm';
+    html+='<tr>';
+    html+='<td style="font-size:.72rem;color:#6b7a99;white-space:nowrap">'+esc(u.date||'')+'</td>';
+    html+='<td><strong>'+esc(u.from||'')+'</strong></td>';
+    html+='<td><span style="font-size:.68rem;background:#f0f2f7;padding:2px 7px;border-radius:10px;color:#374151">'+esc(u.dept||'')+'</span></td>';
+    html+='<td><span style="font-size:.68rem;background:#eff6ff;padding:2px 7px;border-radius:10px;color:#2563eb">'+esc(u.region||'')+'</span></td>';
+    html+='<td><strong>'+esc(u.subject||'')+'</strong>'+(u.notes?'<br><small style="color:#6b7a99">'+esc(u.notes.slice(0,80))+'</small>':'')+'</td>';
+    html+='<td style="font-size:.72rem;color:#374151">'+esc((u.actions||'').slice(0,80))+'</td>';
+    html+='<td><span class="dk-badge '+priCl+'">'+esc(u.priority||'normal')+'</span>'+(u.actionRequired?' <span class="dk-badge s-crit">Action</span>':'')+'</td>';
+    html+='<td><button class="dk-btn-sm" onclick="toggleRgDone(this.dataset.id)" data-id="'+u.id+'">'+( u.done?'Reopen':'Done')+'</button></td>';
+    html+='</tr>';
+  });
+  el.innerHTML=html;
+}
 function markRGDone(id,v){var u=REGIONAL_UPDATES.find(function(x){return x.id===id;});if(u)u.done=v;renderRegional();}
 function exportRegional(){var csv='Date,From,Dept,Region,Subject,Notes,Actions,Priority\n'+REGIONAL_UPDATES.map(function(u){return[u.date,u.from,u.dept,u.region,u.subject,u.notes,u.actions,u.priority].map(function(v){return'"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='regional.csv';a.click();}
 var UAE_ACTIONS=[],UAE_CONTACTS=[],uaeHotelStatuses={};
@@ -2663,7 +2666,7 @@ function renderMktList(){
     var cnt=document.getElementById('mr-count');
     if(!val){
       if(cnt)cnt.textContent='0 requests';
-      el.innerHTML='<div style="font-size:.78rem;color:rgba(255,255,255,.3);padding:12px 0">No requests yet — fill the form above, it auto-saves as you type</div>';
+      el.innerHTML='<div style="font-size:.78rem;color:#9ba7c0;padding:12px 0">No requests yet — fill the form above, it auto-saves as you type</div>';
       return;
     }
     var items=Object.keys(val).map(function(k){var v=val[k];v._key=k;return v;}).reverse();
@@ -2734,31 +2737,12 @@ function _renderMktPDF(f){
 // ══ SUPPLIER CONTACTS ══════════════════════════════════════
 var SC_DATA={};
 function listenSuppliers(){
-  // Show seed data immediately from localStorage while Firebase loads
-  try{
-    var cached=localStorage.getItem('orn_sc_data');
-    if(cached){SC_DATA=JSON.parse(cached);}
-    else if(typeof SEED_SUPPLIERS!=='undefined'&&SEED_SUPPLIERS.length){
-      SEED_SUPPLIERS.forEach(function(s,i){SC_DATA['seed_'+i]=s;});
-      localStorage.setItem('orn_sc_data',JSON.stringify(SC_DATA));
-    }
+  fbOn(FB_ROOT+'/suppliers', function(val){
+    SC_DATA=val||{};
     renderSuppliers();
-  }catch(e){}
-  // Also listen to Firebase for real-time updates
-  if(db){
-    fbOn(FB_ROOT+'/suppliers', function(val){
-      if(val && Object.keys(val).length > 0){
-        SC_DATA=val;
-        try{localStorage.setItem('orn_sc_data',JSON.stringify(SC_DATA));}catch(e){}
-        renderSuppliers();
-        var el=document.getElementById('sc-count');
-        if(el)el.textContent=Object.keys(SC_DATA).length+' contact'+(Object.keys(SC_DATA).length===1?'':'s');
-      } else if(!val && typeof SEED_SUPPLIERS!=='undefined'){
-        // Firebase empty - seed it
-        SEED_SUPPLIERS.forEach(function(s){fbPush(FB_ROOT+'/suppliers',s);});
-      }
-    });
-  }
+    var el=document.getElementById('sc-count');
+    if(el)el.textContent=Object.keys(SC_DATA).length+' contact'+(Object.keys(SC_DATA).length===1?'':'s');
+  });
 }
 function openSupplierForm(){
   sv('sc-edit-id','');
@@ -2797,32 +2781,43 @@ function deleteSupplier(key){
   fbRemove(FB_ROOT+'/suppliers/'+key);
 }
 function renderSuppliers(){
-  var el=document.getElementById('sc-tbody');if(!el)return;
+  var el=document.getElementById('sc-tbody');
+  if(!el)return;
   var q=(document.getElementById('sc-search')||{}).value||'';
   var cf=(document.getElementById('sc-cat-filter')||{}).value||'';
   var sf=(document.getElementById('sc-status-filter')||{}).value||'';
-  var stMap={'Active Contract':'s-active','In Negotiation':'s-prog','To Contact':'s-open','On Hold':'s-hold','No Contract':'s-hold'};
-  var rows=Object.keys(SC_DATA).filter(function(k){
+  var stCls={'Active Contract':'s-active','In Negotiation':'s-prog','To Contact':'s-open','On Hold':'s-hold','No Contract':'s-hold'};
+  var keys=Object.keys(SC_DATA).filter(function(k){
     var s=SC_DATA[k];
-    return(!q||(s.name+s.contact+s.region+s.notes).toLowerCase().includes(q.toLowerCase()))
-      &&(!cf||s.cat===cf)&&(!sf||s.status===sf);
+    var txt=(s.name||'')+(s.contact||'')+(s.region||'')+(s.notes||'');
+    return(!q||txt.toLowerCase().indexOf(q.toLowerCase())>=0)&&(!cf||s.cat===cf)&&(!sf||s.status===sf);
   });
-  if(!rows.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:#9ba7c0;padding:20px;font-size:.82rem">No supplier contacts yet — click <strong>+ Add Contact</strong> to add one, or wait for seed data to load from Firebase.</td></tr>';return;}
-  el.innerHTML=rows.map(function(k){
+  var cnt=document.getElementById('sc-count');
+  if(cnt)cnt.textContent=keys.length+' contact'+(keys.length===1?'':'s');
+  if(!keys.length){
+    el.innerHTML='<tr><td colspan="10" style="text-align:center;padding:24px;color:#6b7a99;font-size:.82rem">No supplier contacts found. Click <strong>+ Add Contact</strong> to add one.</td></tr>';
+    return;
+  }
+  var html='';
+  keys.forEach(function(k){
     var s=SC_DATA[k];
-    return '<tr>'
-      +'<td><strong>'+esc(s.name)+'</strong></td>'
-      +'<td>'+esc(s.contact)+'<br><small style="color:rgba(255,255,255,.4)">'+esc(s.role)+'</small></td>'
-      +'<td><a href="mailto:'+esc(s.email)+'" style="color:#7dd3f8">'+esc(s.email)+'</a></td>'
-      +'<td>'+esc(s.phone)+'</td>'
-      +'<td style="font-size:.73rem">'+esc(s.cat)+'</td>'
-      +'<td>'+esc(s.region)+'</td>'
-      +'<td><span class="dk-badge '+(stMap[s.status]||'')+'">'+esc(s.status)+'</span></td>'
-      +'<td style="font-size:.72rem;color:rgba(255,255,255,.6);max-width:120px">'+esc((s.notes||'').slice(0,80))+'</td>'
-      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3)">'+esc(s.by)+'</td>'
-      +'<td style="white-space:nowrap"><button class="dk-btn-sm" onclick="editSupplier(\''+k+'\')">✏</button> <button class="dk-del" onclick="deleteSupplier(\''+k+'\')">✕</button></td>'
-      +'</tr>';
-  }).join('');
+    var cls=stCls[s.status||'']||'';
+    html+='<tr>';
+    html+='<td><strong>'+esc(s.name)+'</strong></td>';
+    html+='<td>'+esc(s.contact)+'<br><small style="color:#6b7a99">'+esc(s.role)+'</small></td>';
+    html+='<td><a href="mailto:'+esc(s.email)+'" style="color:#2563eb">'+esc(s.email)+'</a></td>';
+    html+='<td>'+esc(s.phone)+'</td>';
+    html+='<td style="font-size:.72rem">'+esc(s.cat)+'</td>';
+    html+='<td>'+esc(s.region)+'</td>';
+    html+='<td><span class="dk-badge '+cls+'">'+esc(s.status)+'</span></td>';
+    html+='<td style="font-size:.72rem;color:#6b7a99;max-width:120px">'+esc((s.notes||'').slice(0,80))+'</td>';
+    html+='<td style="font-size:.7rem;color:#9ba7c0">'+esc(s.by||'')+'</td>';
+    html+='<td style="white-space:nowrap">';
+    html+='<button class="dk-btn-sm" onclick="editSupplier(\''+k+'\')">Edit</button> ';
+    html+='<button class="dk-del" onclick="deleteSupplier(\''+k+'\')">Del</button>';
+    html+='</td></tr>';
+  });
+  el.innerHTML=html;
 }
 function exportSuppliers(){
   var rows=Object.values(SC_DATA);if(!rows.length){alert('No contacts to export');return;}
@@ -2907,13 +2902,13 @@ function deleteScenario(key){
 function renderScenarios(){
   var el=document.getElementById('calc-scenarios');if(!el)return;
   var keys=Object.keys(SCENARIOS);
-  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:rgba(255,255,255,.3)">No saved scenarios yet</div>';return;}
+  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:#9ba7c0">No saved scenarios yet</div>';return;}
   el.innerHTML=keys.reverse().map(function(k){
     var s=SCENARIOS[k];
     return '<div class="calc-scenario">'
       +'<div><strong style="color:#fff">'+esc(s.name)+'</strong>'
-      +' <span style="color:rgba(255,255,255,.4);font-size:.72rem">'+s.nights+'n · '+s.pax+'pax · Sell: '+esc(s.sell)+'</span>'
-      +' <span style="color:rgba(255,255,255,.3);font-size:.68rem;margin-left:8px">'+esc(s.by)+' · '+esc(s.date)+'</span></div>'
+      +' <span style="color:#6b7a99;font-size:.72rem">'+s.nights+'n · '+s.pax+'pax · Sell: '+esc(s.sell)+'</span>'
+      +' <span style="color:#9ba7c0;font-size:.68rem;margin-left:8px">'+esc(s.by)+' · '+esc(s.date)+'</span></div>'
       +'<div style="display:flex;gap:6px">'
       +'<button class="dk-btn-sm" onclick="loadScenario(\''+k+'\')">Load</button>'
       +'<button class="dk-del" onclick="deleteScenario(\''+k+'\')">✕</button>'
@@ -2979,7 +2974,7 @@ function renderEscalations(){
     return(!q||(e.ref+e.hotel+e.desc).toLowerCase().includes(q.toLowerCase()))
       &&(!pf||e.priority===pf)&&(!sf||e.status===sf);
   }).reverse();
-  if(!keys.length){el.innerHTML='<tr><td colspan="12" style="text-align:center;color:rgba(255,255,255,.3);padding:16px">No issues logged — click + Log Issue</td></tr>';return;}
+  if(!keys.length){el.innerHTML='<tr><td colspan="12" style="text-align:center;color:#9ba7c0;padding:16px">No issues logged — click + Log Issue</td></tr>';return;}
   var pc={Critical:'s-crit',High:'s-high',Normal:'s-norm'};
   var sc={Open:'s-open','In Progress':'s-prog',Resolved:'s-done'};
   el.innerHTML=keys.map(function(k){
@@ -2996,8 +2991,8 @@ function renderEscalations(){
         +'<option'+(e.status==='In Progress'?' selected':'')+'>In Progress</option>'
         +'<option'+(e.status==='Resolved'?' selected':'')+'>Resolved</option>'
       +'</select></td>'
-      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3);white-space:nowrap">'+esc(e.date)+'</td>'
-      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3)">'+esc(e.by)+'</td>'
+      +'<td style="font-size:.7rem;color:#9ba7c0;white-space:nowrap">'+esc(e.date)+'</td>'
+      +'<td style="font-size:.7rem;color:#9ba7c0">'+esc(e.by)+'</td>'
       +'<td style="white-space:nowrap"><button class="dk-btn-sm" onclick="editEscalation(\''+k+'\')">✏</button> <button class="dk-del" onclick="deleteEscalation(\''+k+'\')">✕</button></td>'
       +'</tr>';
   }).join('');
@@ -3078,7 +3073,7 @@ function renderDestinations(){
     var d=DEST_DATA[k];
     return(!q||d.name.toLowerCase().includes(q.toLowerCase()))&&(!rf||d.region===rf);
   });
-  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:rgba(255,255,255,.3)">No destination cards yet — click + Add Destination</div>';return;}
+  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:#9ba7c0">No destination cards yet — click + Add Destination</div>';return;}
   var stMap={'Active – Selling Well':'s-active','Active – Building':'s-prog','Seasonal':'s-hold','Under Review':'s-open'};
   el.innerHTML=keys.map(function(k){
     var d=DEST_DATA[k];
@@ -3094,7 +3089,7 @@ function renderDestinations(){
       +'<div class="dest-actions">'
       +'<button class="dk-btn-sm" onclick="editDestination(\''+k+'\')">✏ Edit</button>'
       +'<button class="dk-del" onclick="deleteDestination(\''+k+'\')">✕ Delete</button>'
-      +'<span style="flex:1"></span><span style="font-size:.65rem;color:rgba(255,255,255,.3)">'+esc(d.by)+'</span>'
+      +'<span style="flex:1"></span><span style="font-size:.65rem;color:#9ba7c0">'+esc(d.by)+'</span>'
       +'</div></div>';
   }).join('');
 }
@@ -3162,7 +3157,7 @@ function fmtKPI(k,val){
 function renderKPIs(){
   var el=document.getElementById('kpi-tbody');if(!el)return;
   var keys=Object.keys(KPI_DATA);
-  if(!keys.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:16px">No KPIs set — click + Add KPI</td></tr>';return;}
+  if(!keys.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:#9ba7c0;padding:16px">No KPIs set — click + Add KPI</td></tr>';return;}
   el.innerHTML=keys.reverse().map(function(key){
     var k=KPI_DATA[key];
     var pct=kpiPct(k);
@@ -3173,9 +3168,9 @@ function renderKPIs(){
       +'<td style="font-weight:700;color:#00a8e8">'+fmtKPI(k,k.target)+'</td>'
       +'<td><input class="dk-inp" type="number" value="'+(k.actual||0)+'" style="width:100px;padding:4px 8px;font-size:.75rem" onchange="updateKPIActual(\''+key+'\',this.value)"></td>'
       +'<td>'+kpiBar(pct)+'</td>'
-      +'<td style="font-size:.73rem;color:rgba(255,255,255,.5)">'+esc(k.period)+'</td>'
-      +'<td style="font-size:.73rem;color:rgba(255,255,255,.5);max-width:120px">'+esc(k.notes)+'</td>'
-      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3)">'+esc(k.by)+'</td>'
+      +'<td style="font-size:.73rem;color:#6b7a99">'+esc(k.period)+'</td>'
+      +'<td style="font-size:.73rem;color:#6b7a99;max-width:120px">'+esc(k.notes)+'</td>'
+      +'<td style="font-size:.7rem;color:#9ba7c0">'+esc(k.by)+'</td>'
       +'<td style="white-space:nowrap"><button class="dk-btn-sm" onclick="editKPI(\''+key+'\')">✏</button> <button class="dk-del" onclick="deleteKPI(\''+key+'\')">✕</button></td>'
       +'</tr>';
   }).join('');
