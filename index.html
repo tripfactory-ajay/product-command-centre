@@ -1356,26 +1356,21 @@ var FB_CONFIG = {
 };
 function initFirebase() {
   try {
-    if (typeof firebase !== 'undefined' && firebase.app) {
-      // Already initialised (HMR safe)
-    } else if (typeof firebase !== 'undefined') {
-      firebase.initializeApp(FB_CONFIG);
-    } else {
-      // SDK not ready yet — retry in 200ms
+    if (typeof firebase === 'undefined') {
       setTimeout(initFirebase, 200);
       return;
     }
+    if (!firebase.apps || firebase.apps.length === 0) {
+      firebase.initializeApp(FB_CONFIG);
+    }
     db = firebase.database();
     console.log('✅ Firebase connected — orn-wiki');
-    // Re-wire listeners now db is ready
     if (typeof wireExistingFB === 'function') wireExistingFB();
   } catch(e) {
+    console.warn('Firebase init error:', e.code, e.message);
     if (e.code === 'app/duplicate-app') {
       db = firebase.database();
-      console.log('✅ Firebase reconnected');
       if (typeof wireExistingFB === 'function') wireExistingFB();
-    } else {
-      console.warn('Firebase init error:', e.message);
     }
   }
 }
