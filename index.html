@@ -464,6 +464,113 @@ body{max-width:none!important;margin:0!important;width:100%!important}
 .page{width:100%!important;max-width:none!important}
 .scroll{width:100%!important;max-width:none!important}
 .dk-scroll{width:100%!important;max-width:none!important}
+
+/* ── Button visibility fixes ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;
+  border:none;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;
+  background:#f0f2f7;color:#0d1b3e;transition:.15s}
+.btn:hover{background:#e5e7eb}
+.btn.gr{background:linear-gradient(135deg,#00a8e8,#0077bb)!important;color:#fff!important}
+.btn.gr:hover{opacity:.9}
+.btn.r{background:#fee2e2!important;color:#dc2626!important}
+.btn.y{background:#fef3c7!important;color:#d97706!important}
+/* dk-btn visibility */
+.dk-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;
+  border:1.5px solid #dde2ef;background:#fff;color:#0d1b3e;font-family:inherit;
+  font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
+.dk-btn:hover{background:#f5f7fb;border-color:#b0baca}
+.dk-btn.accent{background:linear-gradient(135deg,#00a8e8,#0077bb)!important;border-color:transparent!important;color:#fff!important}
+.dk-btn.accent:hover{opacity:.9}
+/* back-btn */
+.back-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;
+  border:1.5px solid #dde2ef;background:#fff;color:#6b7a99;font-family:inherit;
+  font-size:.75rem;font-weight:700;cursor:pointer;text-decoration:none;margin-bottom:10px}
+.back-btn:hover{border-color:#00a8e8;color:#00a8e8}
+/* phd header row */
+.phd{display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:14px;flex-wrap:wrap;gap:8px;padding:4px 0}
+.phd h2{font-size:1.1rem;font-weight:900;color:#0d1b3e;margin-bottom:2px}
+.phd p{font-size:.78rem;color:#6b7a99}
+/* dk-sec */
+.dk-sec{background:#fff;border:1px solid #dde2ef;border-radius:12px;
+  padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.dk-sec-hd{font-size:.72rem;font-weight:900;color:#0d1b3e;text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #eef0f6}
+/* dk-inp, dk-sel, dk-ta */
+.dk-inp,.dk-sel,.dk-ta{width:100%;padding:8px 11px;background:#fff;
+  border:1.5px solid #dde2ef;border-radius:7px;color:#0d1b3e;
+  font-family:inherit;font-size:.8rem;outline:none;box-sizing:border-box}
+.dk-inp:focus,.dk-sel:focus,.dk-ta:focus{border-color:#00a8e8;
+  box-shadow:0 0 0 3px rgba(0,168,232,.1)}
+.dk-inp::placeholder,.dk-ta::placeholder{color:#9ba7c0}
+.dk-ta{resize:vertical;min-height:64px}
+.dk-ff label{display:block;font-size:.67rem;font-weight:700;color:#6b7a99;
+  text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.dk-ff{display:flex;flex-direction:column;gap:4px;margin-bottom:4px}
+.dk-row{display:grid;gap:10px;margin-bottom:10px}
+.dk-row.c2{grid-template-columns:1fr 1fr}
+.dk-row.c3{grid-template-columns:1fr 1fr 1fr}
+.dk-row.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+.dk-checks{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.dk-checks label{display:flex;align-items:center;gap:6px;font-size:.74rem;
+  color:#0d1b3e;background:#f5f7fb;border:1px solid #dde2ef;padding:5px 10px;
+  border-radius:7px;cursor:pointer;font-weight:500}
+.dk-checks label:hover{background:#e8f5fd;border-color:#00a8e8}
+.dk-checks input[type=checkbox]{accent-color:#00a8e8}
+/* dk-twrap */
+.dk-twrap{background:#fff;border:1px solid #dde2ef;border-radius:10px;overflow:hidden;margin-bottom:10px}
+.dk-twrap th{background:#0d1b3e;color:#fff;padding:9px 12px;font-size:.63rem;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;text-align:left}
+.dk-twrap td{padding:9px 12px;border-bottom:1px solid #f0f2f7;font-size:.78rem;color:#0d1b3e;vertical-align:middle}
+.dk-twrap tr:hover td{background:#f8fafc}
+/* dk-badge */
+.dk-badge{display:inline-block;font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:10px}
+.dk-btn-sm{background:#fff;border:1px solid #dde2ef;color:#6b7a99;cursor:pointer;
+  font-size:.72rem;padding:3px 8px;border-radius:5px;font-family:inherit;transition:.12s}
+.dk-btn-sm:hover{background:#f5f7fb;color:#0d1b3e}
+.dk-del{background:none;border:none;color:#cdd3de;cursor:pointer;font-size:.85rem;padding:3px 7px;border-radius:4px}
+.dk-del:hover{background:#fee2e2;color:#dc2626}
+/* status badges */
+.s-open{background:#fee2e2;color:#dc2626}
+.s-prog{background:#fef3c7;color:#d97706}
+.s-done{background:#dcfce7;color:#16a34a}
+.s-active{background:#dbeafe;color:#2563eb}
+.s-hold{background:#f3f4f6;color:#6b7280}
+.s-crit{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5}
+.s-high{background:#fef3c7;color:#d97706;border:1px solid #fde68a}
+.s-norm{background:#dcfce7;color:#16a34a;border:1px solid #86efac}
+/* calc boxes */
+.calc-box{background:#fff;border:1px solid #dde2ef;border-radius:10px;padding:14px;text-align:center}
+.calc-v{font-size:1.05rem;font-weight:900;color:#0d1b3e;margin-bottom:4px}
+.calc-l{font-size:.62rem;color:#6b7a99;text-transform:uppercase;letter-spacing:.4px}
+.calc-scenario{background:#fff;border:1px solid #dde2ef;border-radius:8px;
+  padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+/* mini-stats */
+.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.mini-stat{background:#fff;border:1px solid #dde2ef;border-radius:10px;padding:12px 14px;text-align:center}
+.mini-stat-v{font-size:1.3rem;font-weight:900;color:#0d1b3e}
+.mini-stat-l{font-size:.62rem;color:#6b7a99;text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+.mini-stat.red{border-top:3px solid #e03a2f;background:#fff8f8}
+.mini-stat.ylw{border-top:3px solid #f5c518;background:#fffef0}
+.mini-stat.grn{border-top:3px solid #3bb54a;background:#f0fdf4}
+.mini-stat.sky{border-top:3px solid #00a8e8;background:#f0f8ff}
+/* mr-item, dest-card etc */
+.mr-item{background:#fff;border:1px solid #dde2ef;border-radius:8px;
+  padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mr-item-name{font-size:.8rem;font-weight:700;color:#0d1b3e}
+.mr-item-meta{font-size:.68rem;color:#6b7a99;margin-top:2px}
+.dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.dest-card{background:#fff;border:1px solid #dde2ef;border-radius:12px;
+  padding:16px;border-top:3px solid #00a8e8;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.dest-card-name{font-size:.95rem;font-weight:900;color:#0d1b3e;margin-bottom:3px}
+.dest-card-sub{font-size:.68rem;color:#6b7a99;text-transform:uppercase;margin-bottom:10px}
+.dest-row{display:flex;gap:8px;margin-bottom:7px;font-size:.75rem}
+.dest-lbl{color:#6b7a99;font-weight:700;font-size:.63rem;text-transform:uppercase;min-width:56px}
+.dest-val{color:#0d1b3e;line-height:1.4;flex:1}
+.dest-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f2f7}
+.kpi-bar-bg{width:100%;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}
+.kpi-bar-fill{height:100%;border-radius:3px}
+.kpi-pct{font-size:.68rem;color:#6b7a99;margin-top:3px}
 </style>
 
   <!-- Firebase -->
@@ -1256,94 +1363,7 @@ body{max-width:none!important;margin:0!important;width:100%!important}
             <h3>All Files</h3>
             <div style="display:flex;gap:7px;flex-wrap:wrap">
               <input id="file-search" class="tsrch" placeholder="Search files..." oninput="renderFiles()">
-              <select id="file-cat-filter" onchange="renderFiles()" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.75rem">
-                <option value="">All Categories</option>
-                <option>Hotel Contracts</option><option>API / Connectivity</option><option>UAE / Dubai</option>
-                <option>Marketing</option><option>CAM</option><option>Product Pipeline</option>
-                <option>Regional Updates</option><option>Team / HR</option><option>General</option>
-              </select>
-              <button class="btn" style="background:#000;color:#fff;font-size:.72rem" onclick="exportFileList()">⬇ Export List</button>
-            </div>
-          </div>
-          <div class="twrap"><table><thead><tr><th>Name</th><th>Category</th><th>Size</th><th>Uploaded By</th><th>Date/Time</th><th>Notes</th><th></th></tr></thead>
-          <tbody id="files-tbody"></tbody></table></div>
-          <div id="file-count-lbl" style="font-size:.72rem;color:var(--muted);margin-top:7px">No files yet</div>
-        </div>
-      </div></div>
-
-    <!-- UAE-INTERNAL -->
-    <div class="page" id="pg-uae-internal"><div class="scroll"><div style="padding:14px 16px 0"><button class="back-btn" onclick="showPage('home')">← Command Centre</button></div>
-        <div class="phd">
-          <div><h2>🏙️ UAE – Dubai Action Hub</h2><p>Crisis contracting initiative — 60+ target hotels, live rates, India flights</p></div>
-          <a href="https://tripfactory-ajay.github.io/destination-uae/" target="_blank" class="btn gr">🏙️ Open Full Tool ↗</a>
-        </div>
-        <div class="info-banner" style="background:linear-gradient(135deg,#fce8e8,#fff5f5);border:1px solid rgba(204,0,0,.2);border-left:4px solid #cc0000;margin-bottom:8px">
-          <div class="ib" style="color:#cc0000"><div class="ib-v">~20%</div><div class="ib-l">Occupancy Now</div></div>
-          <div class="ib" style="color:#cc0000"><div class="ib-v">-50%</div><div class="ib-l">Rate Drop</div></div>
-          <div class="ib"><div class="ib-v">60+</div><div class="ib-l">Target Hotels</div></div>
-          <div class="ib"><div class="ib-v">18 mo</div><div class="ib-l">Contract Target</div></div>
-        </div>
-        <div style="background:#fff8e1;border:1px solid #ffe082;border-left:4px solid #f5a623;border-radius:9px;padding:11px 14px;font-size:.8rem;color:#5d4037;margin-bottom:12px;line-height:1.6">
-          🚨 <strong>Crisis Window Open:</strong> Iran conflict collapsed UAE hotel occupancy 84.8% → 20%. Dubai capped foreign airlines to 1 flight/day until May 31. Hotels offering 40–60% off with free half board. <strong>Contract now before recovery.</strong>
-        </div>
-        <div class="two">
-          <div class="card">
-            <h3 style="margin-bottom:10px">🎯 Urgent Actions This Week</h3>
-            <div id="uae-actions-list" style="margin-bottom:10px;max-height:160px;overflow-y:auto"></div>
-            <div style="display:flex;gap:7px;flex-wrap:wrap">
-              <input id="uae-new-action" class="tsrch" placeholder="Add action item..." style="flex:1;min-width:140px">
-              <select id="uae-action-priority" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.74rem">
-                <option value="urgent">🔴 Urgent</option><option value="high">🟡 High</option><option value="normal">🟢 Normal</option>
-              </select>
-              <button class="btn gr" onclick="addUAEAction()">+ Add</button>
-            </div>
-          </div>
-          <div class="card">
-            <h3 style="margin-bottom:10px">📞 Hotel Contact Log</h3>
-            <div id="uae-contacts-list" style="max-height:140px;overflow-y:auto;margin-bottom:8px"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-              <input id="uae-hotel-name" class="tsrch" placeholder="Hotel name">
-              <select id="uae-contact-status" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.74rem">
-                <option>RFP Sent</option><option>Contacted</option><option>Rate Sheet Rx</option><option>Negotiating</option><option>Contracted ✓</option>
-              </select>
-              <input id="uae-contact-person" class="tsrch" placeholder="Contact / DOS name">
-              <input id="uae-contact-notes" class="tsrch" placeholder="Notes">
-            </div>
-            <button class="btn gr" style="width:100%" onclick="addUAEContact()">+ Log Contact</button>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:10px">
-          <h3 style="margin-bottom:10px">🏨 Hotel Status Tracker</h3>
-          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
-            <input id="uae-q" class="tsrch" placeholder="Search hotels..." oninput="renderUAETable()" style="flex:1;min-width:140px">
-            <select id="uae-filter-status" onchange="renderUAETable()" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.74rem">
-              <option value="">All Status</option><option>To Action</option><option>Contacted</option><option>RFP Sent</option><option>Negotiating</option><option>Contracted ✓</option>
-            </select>
-            <select id="uae-filter-area" onchange="renderUAETable()" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.74rem">
-              <option value="">All Areas</option><option>Palm Jumeirah</option><option>Downtown Dubai</option><option>Beach / Madinat</option><option>Abu Dhabi</option><option>Desert</option>
-            </select>
-            <button class="btn" style="background:#000;color:#fff;font-size:.72rem" onclick="exportUAECSV()">⬇ CSV</button>
-          </div>
-          <div class="twrap"><table><thead><tr><th>#</th><th>Hotel</th><th>Area</th><th>Crisis Deal</th><th>Rate/Night</th><th>Status</th><th>Assigned</th><th>Notes</th><th></th></tr></thead>
-          <tbody id="uae-table-body"></tbody></table></div>
-          <div id="uae-stats-bar" style="font-size:.72rem;color:var(--muted);margin-top:7px"></div>
-        </div>
-        <div class="card">
-          <h3 style="margin-bottom:8px">📁 UAE Documents</h3>
-          <div class="upload-zone" onclick="document.getElementById('uae-file-input').click()">
-            <input type="file" id="uae-file-input" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.pptx,.png,.jpg" onchange="handleSectionUpload(this.files,'UAE / Dubai')">
-            <div class="upload-zone-ico">📄</div>
-            <div class="upload-zone-txt">Drop rate sheets, contracts, RFPs, correspondence</div>
-            <div class="upload-zone-sub">PDF, Excel, Word, PowerPoint</div>
-          </div>
-          <div id="uae-file-list"></div>
-        </div>
-      </div></div>
-
-  </div>
-</div>
-
-<script>
+              <select i
 
 
 
@@ -1363,7 +1383,7 @@ var CAM_CHART={"months": ["Nov 2024", "Dec 2024", "Jan 2025", "Feb 2025", "Mar 2
 var IFRAME_B64={"hp":"","org":""};
 
 var CU=null;
-var USERS={AK:{name:'Ajay Kawa',pw:'ORNAK'},SN:{name:'Sachin Nene',pw:'ORNSN'},ST:{name:'Seema Tabbasum',pw:'ORNST'},AA:{name:'Ankit Agarwal',pw:'ORNAA'},RK:{name:'Raj Kumar',pw:'ORNRK'},GU:{name:'Guest User',pw:'ORNGU'}};
+var USERS={AK:{name:'Ajay Kawa',pw:'ORNAK'},SN:{name:'Sachin Keni',pw:'ORNSN'},ST:{name:'Seema Tabbasum',pw:'ORNST'},AA:{name:'Ankit Agarwal',pw:'ORNAA'},RK:{name:'Raj Kumar',pw:'ORNRK'},GU:{name:'Guest User',pw:'ORNGU'}};
 
 
 
@@ -1972,7 +1992,7 @@ function postRegionalUpdate(){
   var pri=document.getElementById('rg-priority');if(pri)pri.value='normal';
   var ar=document.getElementById('rg-action-required');if(ar)ar.checked=false;
   // Close form if open
-  var form=document.getElementById('rg-inline-form');
+  var form=document.getElementById('regional-form-card');
   if(form)form.style.display='none';
   alert('Update posted!');
 }
@@ -2695,6 +2715,126 @@ function renderDestinations(){
   el.innerHTML=keys.map(function(k){
     var d=DEST_DATA[k];
     return '<div class="dest-card" style="border-top-color:'+esc(d.color)+'">'
+      +'<div class="dest-card-name">'+esc(d.name)+'</div>'
+      +'<div class="dest-card-sub">'+esc(d.region)+' &nbsp;·&nbsp; <span class="dk-badge '+(stMap[d.status]||'')+'">'+esc(d.status)+'</span></div>'
+      +(d.season?'<div class="dest-row"><div class="dest-lbl">Season</div><div class="dest-val">'+esc(d.season)+'</div></div>':'')
+      +(d.flight?'<div class="dest-row"><div class="dest-lbl">Flight</div><div class="dest-val">'+esc(d.flight)+'</div></div>':'')
+      +(d.visa?'<div class="dest-row"><div class="dest-lbl">Visa</div><div class="dest-val">'+esc(d.visa)+'</div></div>':'')
+      +(d.hotels?'<div class="dest-row"><div class="dest-lbl">Hotels</div><div class="dest-val">'+esc(d.hotels)+'</div></div>':'')
+      +(d.usp?'<div class="dest-row"><div class="dest-lbl">USPs</div><div class="dest-val">'+esc(d.usp)+'</div></div>':'')
+      +(d.tips?'<div class="dest-row"><div class="dest-lbl">Tips</div><div class="dest-val">'+esc(d.tips)+'</div></div>':'')
+      +'<div class="dest-actions">'
+      +'<button class="dk-btn-sm" onclick="editDestination(\''+k+'\')">✏ Edit</button>'
+      +'<button class="dk-del" onclick="deleteDestination(\''+k+'\')">✕ Delete</button>'
+      +'<span style="flex:1"></span><span style="font-size:.65rem;color:rgba(255,255,255,.3)">'+esc(d.by)+'</span>'
+      +'</div></div>';
+  }).join('');
+}
+
+// ══ KPI TRACKER ══════════════════════════════════════════
+var KPI_DATA={};
+function listenKPIs(){
+  fbOn(FB_ROOT+'/kpis', function(val){
+    KPI_DATA=val||{};renderKPIs();renderKPISummary();
+    var el=document.getElementById('home-kpi-count');if(el)el.textContent=Object.keys(KPI_DATA).length;
+  });
+}
+function openKPIForm(){
+  sv('kpi-edit-id','');
+  var t=document.getElementById('kpi-form-title');if(t)t.textContent='New KPI Target';
+  ['kpi-name','kpi-owner','kpi-period','kpi-notes','kpi-target','kpi-actual'].forEach(function(id){sv(id,'');});
+  document.getElementById('kpi-form').style.display='block';
+  document.getElementById('kpi-form').scrollIntoView({behavior:'smooth'});
+}
+function closeKPIForm(){document.getElementById('kpi-form').style.display='none';}
+function saveKPI(){
+  var name=gv('kpi-name');if(!name){alert('Enter KPI name');return;}
+  var editId=gv('kpi-edit-id');
+  var k={
+    name:name,cat:gv('kpi-cat'),owner:gv('kpi-owner'),
+    target:parseFloat(gv('kpi-target'))||0,actual:parseFloat(gv('kpi-actual'))||0,
+    unit:gv('kpi-unit'),period:gv('kpi-period'),notes:gv('kpi-notes'),
+    by:CU?CU.name:'',date:new Date().toLocaleDateString()
+  };
+  if(editId){
+    fbSet(FB_ROOT+'/kpis/'+editId, k, function(){closeKPIForm();});
+  } else {
+    fbPush(FB_ROOT+'/kpis', k, function(){closeKPIForm();});
+  }
+}
+function editKPI(key){
+  var k=KPI_DATA[key];if(!k)return;
+  sv('kpi-edit-id',key);
+  var t=document.getElementById('kpi-form-title');if(t)t.textContent='Edit KPI';
+  ['name','owner','period','notes'].forEach(function(f){sv('kpi-'+f,k[f]);});
+  sv('kpi-target',k.target);sv('kpi-actual',k.actual);
+  ['kpi-cat','kpi-unit'].forEach(function(id){var el=document.getElementById(id);if(el&&k[id.replace('kpi-','')])el.value=k[id.replace('kpi-','')];});
+  document.getElementById('kpi-form').style.display='block';
+  document.getElementById('kpi-form').scrollIntoView({behavior:'smooth'});
+}
+function updateKPIActual(key,val){
+  fbSet(FB_ROOT+'/kpis/'+key+'/actual', parseFloat(val)||0);
+}
+function deleteKPI(key){
+  if(!confirm('Delete this KPI?'))return;
+  fbRemove(FB_ROOT+'/kpis/'+key);
+}
+function kpiBar(pct){
+  var c=pct>=100?'#3bb54a':pct>=70?'#f5c518':'#e03a2f';
+  return '<div class="kpi-bar-bg"><div class="kpi-bar-fill" style="width:'+pct+'%;background:'+c+'"></div></div>'
+    +'<div class="kpi-pct">'+pct+'%</div>';
+}
+function fmtKPI(k,val){
+  var u=k.unit||'';
+  if(u.includes('£'))return '£'+Number(val||0).toLocaleString();
+  if(u.includes('$'))return '$'+Number(val||0).toLocaleString();
+  if(u.includes('₹'))return '₹'+Number(val||0).toLocaleString();
+  return Number(val||0).toLocaleString()+' '+u.replace(/[£$₹]/g,'').trim();
+}
+function renderKPIs(){
+  var el=document.getElementById('kpi-tbody');if(!el)return;
+  var keys=Object.keys(KPI_DATA);
+  if(!keys.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:16px">No KPIs set — click + Add KPI</td></tr>';return;}
+  el.innerHTML=keys.reverse().map(function(key){
+    var k=KPI_DATA[key];
+    var pct=kpiPct(k);
+    return '<tr>'
+      +'<td><strong>'+esc(k.name)+'</strong></td>'
+      +'<td style="font-size:.73rem">'+esc(k.cat)+'</td>'
+      +'<td>'+esc(k.owner)+'</td>'
+      +'<td style="font-weight:700;color:#00a8e8">'+fmtKPI(k,k.target)+'</td>'
+      +'<td><input class="dk-inp" type="number" value="'+(k.actual||0)+'" style="width:100px;padding:4px 8px;font-size:.75rem" onchange="updateKPIActual(\''+key+'\',this.value)"></td>'
+      +'<td>'+kpiBar(pct)+'</td>'
+      +'<td style="font-size:.73rem;color:rgba(255,255,255,.5)">'+esc(k.period)+'</td>'
+      +'<td style="font-size:.73rem;color:rgba(255,255,255,.5);max-width:120px">'+esc(k.notes)+'</td>'
+      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3)">'+esc(k.by)+'</td>'
+      +'<td style="white-space:nowrap"><button class="dk-btn-sm" onclick="editKPI(\''+key+'\')">✏</button> <button class="dk-del" onclick="deleteKPI(\''+key+'\')">✕</button></td>'
+      +'</tr>';
+  }).join('');
+}
+function renderKPISummary(){
+  var el=document.getElementById('kpi-summary');if(!el)return;
+  var all=Object.values(KPI_DATA);if(!all.length){el.innerHTML='';return;}
+  var on=all.filter(function(k){return kpiPct(k)>=100;}).length;
+  var near=all.filter(function(k){var p=kpiPct(k);return p>=70&&p<100;}).length;
+  var behind=all.filter(function(k){return kpiPct(k)<70;}).length;
+  var avg=all.length?Math.round(all.reduce(function(a,k){return a+kpiPct(k);},0)/all.length):0;
+  el.innerHTML=[
+    '<div class="mini-stat grn"><div class="mini-stat-v">'+on+'</div><div class="mini-stat-l">On Target</div></div>',
+    '<div class="mini-stat ylw"><div class="mini-stat-v">'+near+'</div><div class="mini-stat-l">Near Target</div></div>',
+    '<div class="mini-stat red"><div class="mini-stat-v">'+behind+'</div><div class="mini-stat-l">Behind Target</div></div>',
+    '<div class="mini-stat sky"><div class="mini-stat-v">'+avg+'%</div><div class="mini-stat-l">Avg Completion</div></div>',
+  ].join('');
+}
+function exportKPIs(){
+  var rows=Object.values(KPI_DATA);if(!rows.length){alert('No KPIs to export');return;}
+  var csv='KPI,Category,Owner,Target,Actual,Progress %,Unit,Period,Notes\n'
+    +rows.map(function(k){return[k.name,k.cat,k.owner,k.target,k.actual||0,kpiPct(k)+'%',k.unit,k.period,k.notes]
+      .map(function(v){return'"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='kpis.csv';a.click();
+}
+
+r:'+esc(d.color)+'">'
       +'<div class="dest-card-name">'+esc(d.name)+'</div>'
       +'<div class="dest-card-sub">'+esc(d.region)+' &nbsp;·&nbsp; <span class="dk-badge '+(stMap[d.status]||'')+'">'+esc(d.status)+'</span></div>'
       +(d.season?'<div class="dest-row"><div class="dest-lbl">Season</div><div class="dest-val">'+esc(d.season)+'</div></div>':'')
