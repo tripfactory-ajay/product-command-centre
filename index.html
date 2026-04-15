@@ -1343,11 +1343,440 @@ body{max-width:none!important;margin:0!important;width:100%!important}
   </div>
 </div>
 
-<script>
+<script>// ── Firebase init — waits for SDK then connects ────────────
+var db = null;
+var FB_CONFIG = {
+  apiKey: "AIzaSyCJXOlSMyFlrcnQ2air1h1dbhFqLxXzOdI",
+  authDomain: "orn-wiki.firebaseapp.com",
+  databaseURL: "https://orn-wiki-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "orn-wiki",
+  storageBucket: "orn-wiki.firebasestorage.app",
+  messagingSenderId: "25736842668",
+  appId: "1:25736842668:web:754f9cf6268e2a5552fe09"
+};
+function initFirebase() {
+  try {
+    if (typeof firebase !== 'undefined' && firebase.app) {
+      // Already initialised (HMR safe)
+    } else if (typeof firebase !== 'undefined') {
+      firebase.initializeApp(FB_CONFIG);
+    } else {
+      // SDK not ready yet — retry in 200ms
+      setTimeout(initFirebase, 200);
+      return;
+    }
+    db = firebase.database();
+    console.log('✅ Firebase connected — orn-wiki');
+    // Re-wire listeners now db is ready
+    if (typeof wireExistingFB === 'function') wireExistingFB();
+  } catch(e) {
+    if (e.code === 'app/duplicate-app') {
+      db = firebase.database();
+      console.log('✅ Firebase reconnected');
+      if (typeof wireExistingFB === 'function') wireExistingFB();
+    } else {
+      console.warn('Firebase init error:', e.message);
+    }
+  }
+}
+initFirebase();
+
+function fbSet(path,data,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).set(data,function(err){if(cb)cb(err);});}
+function fbPush(path,data,cb){if(!db){if(cb)cb('offline',null);return;}var r=db.ref(path).push(data,function(err){if(cb)cb(err,r?r.key:null);});}
+function fbRemove(path,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).remove(function(err){if(cb)cb(err);});}
+function fbOn(path,cb){if(!db){setTimeout(function(){fbOn(path,cb);},300);return;}db.ref(path).on('value',function(s){cb(s.val());});}
+function fbOnce(path,cb){if(!db){setTimeout(function(){fbOnce(path,cb);},300);return;}db.ref(path).once('value',function(s){cb(s.val());});}
+
+
+function fbSet(path,data,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).set(data,function(err){if(cb)cb(err);});}
+function fbPush(path,data,cb){if(!db){if(cb)cb('offline',null);return;}var r=db.ref(path).push(data,function(err){if(cb)cb(err,r?r.key:null);});}
+function fbRemove(path,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).remove(function(err){if(cb)cb(err);});}
+function fbOn(path,cb){if(!db){setTimeout(function(){fbOn(path,cb);},300);return;}db.ref(path).on('value',function(s){cb(s.val());});}
+function fbOnce(path,cb){if(!db){setTimeout(function(){fbOnce(path,cb);},300);return;}db.ref(path).once('value',function(s){cb(s.val());});}
 
 
 
 
+// ── Seed destination cards so page is never blank ────────
+var SEED_DESTS = [
+  {name:'Maldives',region:'Indian Ocean',status:'Active – Selling Well',color:'#00a8e8',
+   season:'Nov–Apr (dry season)',flight:'~10–11h from London',
+   visa:'UK: Visa on Arrival 30 days free. India: Visa on Arrival USD $50.',
+   hotels:'Kandima, Sun Siyam Iru Fushi, Angsana Velavaru, Atmosphere Kanifushi, Cinnamon Hakuraa, Meeru Island',
+   usp:'World-class snorkelling & diving. Private overwater villas. All-inclusive options. No mass tourism feel.',
+   tips:'Upsell to water villa. Check seaplane vs speedboat transfer cost. Best value Nov & May shoulder seasons.',
+   by:'System',date:'Pre-loaded'},
+  {name:'Dubai & UAE',region:'Middle East / UAE',status:'Active – Selling Well',color:'#f5c518',
+   season:'Oct–Apr (cool & dry)',flight:'~7h from London',
+   visa:'UK: Visa on Arrival 30 days free. India: Visa required — apply 3–4 weeks in advance.',
+   hotels:'Atlantis The Palm, Waldorf Astoria Palm, Jumeirah Al Qasr, Address Downtown, Fairmont The Palm, Burj Al Arab',
+   usp:'Iconic skyline. Desert & beach in one trip. World-class shopping. Family attractions. Strong India market.',
+   tips:'Crisis window Apr 2025 — rates 40-60% off. Great time to sell. Combine with Abu Dhabi day trip.',
+   by:'System',date:'Pre-loaded'},
+  {name:'Thailand',region:'SE Asia',status:'Active – Selling Well',color:'#3bb54a',
+   season:'Nov–Apr (cool & dry). Phuket all year.',flight:'~11–12h from London',
+   visa:'UK: Visa exemption 30 days. India: Visa on Arrival available.',
+   hotels:'Anantara Layan, Trisara, Rosewood Phuket, Capella Bangkok, Mandarin Oriental Bangkok',
+   usp:'Luxury at value prices. Beach, culture & food in one destination. Strong from India market.',
+   tips:'Phuket best Nov–Mar. Bangkok short breaks work well. Upsell island hopping packages.',
+   by:'System',date:'Pre-loaded'},
+  {name:'Bali, Indonesia',region:'SE Asia',status:'Active – Selling Well',color:'#e03a2f',
+   season:'Apr–Oct (dry). Avoid Dec–Feb monsoon.',flight:'~15–16h from London (via SIN/KUL)',
+   visa:'UK: Visa on Arrival 30 days. India: Visa on Arrival USD $35.',
+   hotels:'Four Seasons Sayan, Viceroy Bali, COMO Uma Ubud, Alila Villas Uluwatu, Potato Head Beach Club',
+   usp:'Spiritual & wellness destination. Rice terraces. World-class surf. Unique culture. Photography hotspot.',
+   tips:'Combine South Bali (beach) + Ubud (culture). Honeymooners love it. Strong Instagram appeal.',
+   by:'System',date:'Pre-loaded'},
+  {name:'Sri Lanka',region:'Indian Subcontinent',status:'Active – Building',color:'#9b59b6',
+   season:'Dec–Mar West Coast. Apr–Sep East Coast.',flight:'~10–11h from London',
+   visa:'UK & India: ETA required online — USD $20, quick to get.',
+   hotels:'Amanwella, Resplendent Ceylon properties, Cape Weligama, Fortress Resort, Shangri-La Colombo',
+   usp:'Affordable luxury. Tea plantations, wildlife, beaches, cultural triangle. Emerging destination.',
+   tips:'Best sold as a circuit — Colombo, Cultural Triangle, Hill Country, Beach. Train journey is iconic.',
+   by:'System',date:'Pre-loaded'},
+  {name:'Singapore',region:'SE Asia',status:'Active – Selling Well',color:'#e67e22',
+   season:'Year-round. Feb–Apr driest.',flight:'~13h from London',
+   visa:'UK: Visa free 30 days. India: Visa required.',
+   hotels:'Marina Bay Sands, Raffles Singapore, Capella Singapore, Andaz Singapore, Pan Pacific',
+   usp:'Gateway to Asia. Family & luxury. Food capital. Universal Studios. Clean & safe.',
+   tips:'Works as stopover with Bali or Thailand. F1 Grand Prix in Sep. Strong from India — visa is key objection.',
+   by:'System',date:'Pre-loaded'},
+];
+function initSeedDestinations(){
+  if(!db) return;
+  fbOnce(FB_ROOT+'/destinations', function(val){
+    if(val && Object.keys(val).length > 0) return; // already has data
+    SEED_DESTS.forEach(function(d){
+      d.id = 'seed_'+d.name.replace(/[^a-z]/gi,'_').toLowerCase();
+      fbPush(FB_ROOT+'/destinations', d);
+    });
+    console.log('✅ Seed destinations loaded');
+  });
+}
+
+// ── Calculator ready check ──────────────────────────────
+function calcReady(){
+  return !!document.getElementById('r-hotel-total');
+}
+var _origRunCalc = window.runCalc;
+window.runCalc = function(){
+  if(!calcReady()){return;}
+  if(_origRunCalc) _origRunCalc();
+};
+
+// ── Marketing request: show immediately, load async ──────
+var _origRenderMktList = window.renderMktList;
+window.renderMktList = function(){
+  var el = document.getElementById('mr-list');
+  var cnt = document.getElementById('mr-count');
+  if(!el) return;
+  if(!db){
+    el.innerHTML = '<div style="font-size:.78rem;color:rgba(255,255,255,.4);padding:12px 0">Connecting to database...</div>';
+    setTimeout(function(){if(window.renderMktList) window.renderMktList();}, 1000);
+    return;
+  }
+  if(_origRenderMktList) _origRenderMktList();
+};
+
+// Call seed after Firebase ready
+var _origWireExisting = window.wireExistingFB;
+window.wireExistingFB = function(){
+  if(_origWireExisting) _origWireExisting();
+  setTimeout(initSeedDestinations, 2000);
+  setTimeout(initSeedSuppliers, 3000);
+};
+
+var SEED_SUPPLIERS = [
+  {
+    "name": "The Bristol Hotel Dubai (formerly JW Marriott Hote",
+    "contact": "Sarah Al-Rasheed",
+    "role": "Director of Sales",
+    "email": "sarah.alrasheed@thehotels.com",
+    "phone": "+66 58 513 3704",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Dubai, UAE",
+    "status": "Active Contract",
+    "notes": "ADR \u00a354 | 4516 room nights booked | Source: Direct | Revenue \u00a3220,137",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Yas Plaza Mangroves",
+    "contact": "Michael Chen",
+    "role": "Revenue Manager",
+    "email": "michael.chen@yashotels.com",
+    "phone": "+971 95 616 7894",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Abu Dhabi, UAE",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3236 | 163 room nights booked | Source: API | Revenue \u00a340,326",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Novotel Singapore on Kitchener",
+    "contact": "Priya Sharma",
+    "role": "GSA Representative",
+    "email": "priya.sharma@novotelhotels.com",
+    "phone": "+44 92 962 3651",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Singapore, Singapore",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3205 | 765 room nights booked | Source: API | Revenue \u00a3165,222",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Bangkok Palace Hotel",
+    "contact": "Ahmed Hassan",
+    "role": "National Sales Manager",
+    "email": "ahmed.hassan@bangkokhotels.com",
+    "phone": "+62 54 221 7053",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Bangkok, Thailand",
+    "status": "In Negotiation",
+    "notes": "ADR \u00a353 | 4291 room nights booked | Source: API | Revenue \u00a3156,142",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Fishermen's Harbour Urban Resort",
+    "contact": "Emma Thompson",
+    "role": "Area Director of Sales",
+    "email": "emma.thompson@fishermen'shotels.com",
+    "phone": "+39 56 255 1869",
+    "pref": "Phone",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Phuket, Thailand",
+    "status": "In Negotiation",
+    "notes": "ADR \u00a388 | 1783 room nights booked | Source: API | Revenue \u00a3129,865",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Visesa Ubud Resort",
+    "contact": "Raj Patel",
+    "role": "Key Account Manager",
+    "email": "raj.patel@visesahotels.com",
+    "phone": "+62 68 705 8775",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Bali, Indonesia",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3174 | 226 room nights booked | Source: API | Revenue \u00a343,831",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Radisson Hotel & Conference Centre London Heathrow",
+    "contact": "Maria Santos",
+    "role": "Director of Sales",
+    "email": "maria.santos@radissonhotels.com",
+    "phone": "+66 73 493 5741",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "London, UK",
+    "status": "To Contact",
+    "notes": "ADR \u00a3134 | 174 room nights booked | Source: Direct | Revenue \u00a321,925",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "DoubleTree by Hilton Paris Bougival",
+    "contact": "David Kim",
+    "role": "Revenue Manager",
+    "email": "david.kim@doubletreehotels.com",
+    "phone": "+66 55 428 8439",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Paris, France",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3121 | 583 room nights booked | Source: Direct | Revenue \u00a377,051",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Radisson Hotel & Suites Amsterdam South",
+    "contact": "Fatima Al-Zahra",
+    "role": "GSA Representative",
+    "email": "fatima.alzahra@radissonhotels.com",
+    "phone": "+33 64 737 1269",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Amsterdam, Netherlands",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3139 | 394 room nights booked | Source: Direct | Revenue \u00a351,501",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Hampton By Hilton Rome North Fiano Romano",
+    "contact": "James Mitchell",
+    "role": "National Sales Manager",
+    "email": "james.mitchell@hamptonhotels.com",
+    "phone": "+33 60 594 1281",
+    "pref": "Phone",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Rome, Italy",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3137 | 191 room nights booked | Source: Direct | Revenue \u00a326,938",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "DoubleTree by Hilton Tokyo Ariake",
+    "contact": "Ananya Krishnan",
+    "role": "Area Director of Sales",
+    "email": "ananya.krishnan@doubletreehotels.com",
+    "phone": "+44 75 221 3791",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Tokyo, Japan",
+    "status": "In Negotiation",
+    "notes": "ADR \u00a3365 | 156 room nights booked | Source: Direct | Revenue \u00a373,936",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "InterContinental Sydney by IHG",
+    "contact": "Carlos Rivera",
+    "role": "Key Account Manager",
+    "email": "carlos.rivera@intercontinentalhotels.com",
+    "phone": "+27 79 501 7184",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Sydney, Australia",
+    "status": "In Negotiation",
+    "notes": "ADR \u00a3384 | 228 room nights booked | Source: API | Revenue \u00a397,090",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Fairway Colombo - Sri Lanka's First Hotel With Rob",
+    "contact": "Sophie Dubois",
+    "role": "Director of Sales",
+    "email": "sophie.dubois@fairwayhotels.com",
+    "phone": "+971 76 654 1977",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Colombo, Sri Lanka",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3135 | 110 room nights booked | Source: Direct | Revenue \u00a312,676",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Cresta Grande Cape Town",
+    "contact": "Omar Abdullah",
+    "role": "Revenue Manager",
+    "email": "omar.abdullah@crestahotels.com",
+    "phone": "+33 93 659 3749",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Cape Town, South Africa",
+    "status": "To Contact",
+    "notes": "ADR \u00a3130 | 108 room nights booked | Source: API | Revenue \u00a313,887",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Medhufushi Island Resort",
+    "contact": "Lisa Wong",
+    "role": "Director of Sales",
+    "email": "lisa.wong@medhufushotels.com",
+    "phone": "+852 858 1175",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Maldives",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3417 | 150 room nights | Source: Direct | Key market property",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Grand Barcelona Hotel",
+    "contact": "Arjun Mehta",
+    "role": "Revenue Manager",
+    "email": "arjun.mehta@grandhotels.com",
+    "phone": "+43 973 6016",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Barcelona, Spain",
+    "status": "In Negotiation",
+    "notes": "ADR \u00a3180 | 500 room nights | Source: Direct | Key market property",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Grand Mumbai Hotel",
+    "contact": "Nina Petrov",
+    "role": "GSA Representative",
+    "email": "nina.petrov@grandhotels.com",
+    "phone": "+960 385 7878",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Mumbai, India",
+    "status": "To Contact",
+    "notes": "ADR \u00a3180 | 500 room nights | Source: Direct | Key market property",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Furama Bukit Bintang",
+    "contact": "Hassan Ibrahim",
+    "role": "National Sales Manager",
+    "email": "hassan.ibrahim@furamahotels.com",
+    "phone": "+34 989 1136",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Kuala Lumpur, Malaysia",
+    "status": "Active Contract",
+    "notes": "ADR \u00a349 | 1972 room nights | Source: API | Key market property",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Holiday Inn Golden Mile, an IHG Hotel",
+    "contact": "Chloe Martin",
+    "role": "Area Director of Sales",
+    "email": "chloe.martin@holidayhotels.com",
+    "phone": "+60 700 1733",
+    "pref": "WhatsApp",
+    "cat": "Hotel \u2013 Luxury",
+    "region": "Hong Kong, China",
+    "status": "Active Contract",
+    "notes": "ADR \u00a3248 | 116 room nights | Source: API | Key market property",
+    "by": "System",
+    "date": "Pre-loaded"
+  },
+  {
+    "name": "Grand Vienna Hotel",
+    "contact": "Vikram Nair",
+    "role": "Key Account Manager",
+    "email": "vikram.nair@grandhotels.com",
+    "phone": "+91 779 5609",
+    "pref": "Email",
+    "cat": "Hotel \u2013 Upscale",
+    "region": "Vienna, Austria",
+    "status": "In Negotiation",
+    "notes": "ADR \u00a3180 | 500 room nights | Source: Direct | Key market property",
+    "by": "System",
+    "date": "Pre-loaded"
+  }
+];
+
+function initSeedSuppliers(){
+  if(!db) return;
+  fbOnce(FB_ROOT+'/suppliers', function(val){
+    if(val && Object.keys(val).length > 0) return;
+    SEED_SUPPLIERS.forEach(function(s){ fbPush(FB_ROOT+'/suppliers', s); });
+    console.log('✅ Seed suppliers loaded — '+SEED_SUPPLIERS.length+' contacts');
+  });
+}
 
 var STAFF=[{"n": "Bhagya Jyothi B", "t": "Assistant Manager - Sales", "d": "Sales", "l": "Bengaluru"}, {"n": "Kamini Sharma", "t": "Assistant Manager - Sales", "d": "Sales", "l": "Bengaluru"}, {"n": "Neda Sadaf Tajuddin", "t": "Senior Manager- B2B Business Performance", "d": "Sales", "l": "Bengaluru"}, {"n": "Ambuja Reddy", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Yashaswini A", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sangita Roy", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Soheb Makandar", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Benaka K", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Manisha Anilkumar Badkar", "t": "Relationship Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Prakash M", "t": "Assistant Manager - Sales", "d": "Sales", "l": "Bengaluru"}, {"n": "Pulkit Gupta", "t": "Assistant Manager - Sales", "d": "Sales", "l": "Gurgaon"}, {"n": "Martina Vasan", "t": "Senior Manager- B2C Business Performance", "d": "Sales", "l": "Bengaluru"}, {"n": "Aliya Banu N", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Solomon Nikhil D", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Tejas C", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Ranjan Gowda R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sangita Rai", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Kriti Rai", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Sanket De", "t": "Team Lead - Sales", "d": "Sales", "l": "Siliguri"}, {"n": "Ankur Dwivedi", "t": "Sr. Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Periyaraj Ravichandran", "t": "Team Lead - Sales", "d": "Sales", "l": "Bengaluru"}, {"n": "Sneha Pradhan", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Sahil Pradhan", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Nalendu Roy", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Ananya S Gowda", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Prabin Nowbagh", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Deepthi G C", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Arpitha V", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Harismitha B M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Brijesh Krishna M N", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Adrian J Milton", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Mohammed Daaniyal", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sanchaita Dutta Chowdhury", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Reena P", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Spoorthi P K", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Mohana M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Prakash B", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sanjana M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Subramaya M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sudipta Mondal", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Vishnu Priya J", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Shaistha N", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Vijrambha Gowda", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Rajini A R", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Raina Hussain", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Amra Jabeen", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Gudla Aryan Rajesh", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Janavi G", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sanjana S", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Jyothi S Vara", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Janani SB", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Dhaiwik R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Saran S", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sree Parvathi R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Nisarga C R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Spandana L", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sphurti S Ankali", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Manasa M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Glen Somanna A", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Mamtha Patel Norat Ram", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Harshitha B", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Vijaya Lakshmi karanth", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Parthib Kumar Barman", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Ria Dhar", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Bishal Sarkar", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Simran Thapa", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Tomali Purkayastha", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Priyanki Roy", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Anjali Prasad", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Sandhya Kumari", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Swastika Rai", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Sangdup Tamang", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Diya Dechamma K B", "t": "FCD Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Komala H", "t": "FCD Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Subarna Shaw", "t": "Team Lead - Sales", "d": "Sales", "l": "Kolkata"}, {"n": "Sania Jakki", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Nikita Ekka", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Rajdeep Sarkar", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Susmita Roy", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Surabhi Pradhan", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Ayush Rai", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Shristi Gurung", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Pradumna Rai", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Kaurag Bhattacharjee", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Shayani Dutta", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Nikita Tamang", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Anushri Tamang", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Megha Nandita Sah", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Shrestha Nandy", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Muskaan Khawas", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Nisith Chakraborty", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Asmita Sarkar", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Manideep Koduri", "t": "Key Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Kiran Kumar A C", "t": "Key Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Mohith K V", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Thanushree A", "t": "FCD Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Kartikay Yagyik", "t": "Quality Control - Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Sumit Jha", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Bindu Shree R", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Aniket Gahinath Avhad", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Chandana D", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Rakshitha J", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Ruchitha N", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Srotha Biswal Biswal", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sandesh Shastry", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Vishwas S", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Deepthi C R", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Naveenya V", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Chirag V", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Kruthika T D", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sri Vidhya M S", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sharanya M V", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Shrinithin F X", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Vidya Ramananda Bhat", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Abhay kiran v", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sanjana K", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sanjana Hariprasad", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Radha Y", "t": "Destination  Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Fouziya Sultana", "t": "Assistant Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Rashmi A", "t": "Assistant Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Nishanth D Shekar", "t": "Assistant Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Deepak Kumar Singh", "t": "Assistant Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Sonu Kumar B", "t": "Assistant Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Vivek Gurjar", "t": "Assistant Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "J Priscilla John", "t": "Business Development Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Mala Kondamma", "t": "Business Development Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Ankita Chakraborty", "t": "Team Lead", "d": "Sales", "l": "Siliguri"}, {"n": "Chethan G K", "t": "Process Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Babitha G", "t": "Quality Analyst", "d": "Sales", "l": "Bengaluru"}, {"n": "Bharat Bhushan Gulati", "t": "Sales and Operations Manager - OCEANIA", "d": "Sales", "l": "Gurgaon"}, {"n": "Himanshu Kumar", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Raju Sarkar", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Manoj kumar sankar", "t": "Process Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Ashutosh Shukla", "t": "Business Development Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Reeba Rehan", "t": "Key Account Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Angad Shishodia", "t": "Business Head", "d": "Sales", "l": "Gurgaon"}, {"n": "Mohammed Sarosh", "t": "Key Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Ravinder Singh Lamba", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Lalit S Sabaji Sawant", "t": "Team Lead", "d": "Sales", "l": "Mumbai"}, {"n": "Siddharth Pagar", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Siddharth Ramakant Bhoir", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Rohan Apke", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Shantanu Abhay Sukhathankar", "t": "Business Development Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Satyendra jagdsih Shah", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Ganesh Sorte", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Jagdish prabhakar Kerkar", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Prasad Harishchandra Kawli", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Nirvan KAILASH Yelve", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Avinash Dattaram Ghatge", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Noopur Paresh Mehta", "t": "Sr. Destination Expert", "d": "Sales", "l": "Mumbai"}, {"n": "Minal Siddhesh Siddhesh Bhagat", "t": "Sr. Destination Expert", "d": "Sales", "l": "Mumbai"}, {"n": "Bakhtiyar Maaz Ahmed", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Abhimanyu Yadav", "t": "B2B Support Executive", "d": "Sales", "l": "Siliguri"}, {"n": "Kuruva Rajendra", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Sohini Banerjee", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Tasi Dukpa", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Kushal H M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Rakshith C R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Shreyas G", "t": "Field Sales Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Sushmita Pradhan", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Vinod More", "t": "Destination Expert", "d": "Sales", "l": "Bhopal"}, {"n": "Ankit Makwana", "t": "Sr. Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Anu Beohar", "t": "Destination Expert", "d": "Sales", "l": "Jabalpur"}, {"n": "Joseph A", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Prema A", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Pratyush Anand", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Abdul Hameed A", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Madhu Sudhan S", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Roshni Suri", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Siji Sam", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sarita Devi", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Devendla Babu", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Shimron Gershom", "t": "Key Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Ayan Razvi", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Sumila R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Uday Manikanta M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Lokesh C A", "t": "Field Sales Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Arshdeep Kaur", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Kirti Tanwar", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Salman Khan", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Nikhil Kachhawa", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Deepak Kumar", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Nandhini J", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Lavanya N R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Anusha P", "t": "Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Gagan S G", "t": "Field Sales Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Sagar S P", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Kruthik C", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Shivaraj S R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Ankit Bansal", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Lalit Kumar", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Vivek Mandal", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Tejaswini M", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Varsha R", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Shivakumar S Y", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Rupam Kumari", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sayeda Afrin Banu", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Deepa K S", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Vaneet Rana", "t": "Assistant Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Manish Singh Chaudhary", "t": "Sr. Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Saleem Elahi", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Hyderali Meer", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Abdul Usman Ali", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Suhail Ahamed S", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Suma G", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Kanhaiya Singh", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Sagar Prasad", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Nikhil Chaturvedi", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Ganya Shree D C", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Mohd Shuaib", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Surabhi Barman", "t": "Sr. Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Bhoomika A V", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Naveen Kumar", "t": "Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Sandhya V", "t": "Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Anusha S", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Abinaya S", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Nuthan Kumari L", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Abhishek E Varghese", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "R Bhoomika", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Anu V", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Harini B", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Srinath H", "t": "Field Sales Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Sailesh Pradhan", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Swathi C", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Rakhi Sharma", "t": "Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "P.Sosi Peter Wilson", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Amit Sharma", "t": "Destination Expert", "d": "Sales", "l": "Bengaluru"}, {"n": "Neha N", "t": "Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Ritika Gupta", "t": "Destination Expert", "d": "Sales", "l": "Siliguri"}, {"n": "Shantanu Aggarwal", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Shikha Sharma", "t": "Destination Expert", "d": "Sales", "l": "Gurgaon"}, {"n": "Shivam Ramugrah Pandey", "t": "Sr. Destination Expert", "d": "Sales", "l": "Mumbai"}, {"n": "Raheela Abdul Aziz Kaware", "t": "Destination Expert", "d": "Sales", "l": "Mumbai"}, {"n": "Sujata Dambarsingh Budha", "t": "Destination Expert", "d": "Sales", "l": "Mumbai"}, {"n": "Saba Firdose", "t": "Assistant Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Jyotsna S", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Raaj Navgrahe", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Dipesh Kiran Kasar", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Shahanaz R", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Vijnesh Jayanandan Poojary", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Martin L Nerella", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Samudwith M S", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Augustine Alex P", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Deepthi G A", "t": "Team Lead", "d": "Sales", "l": "Bengaluru"}, {"n": "Gurpreet Singh", "t": "Business Development Manager", "d": "Sales", "l": "Delhi"}, {"n": "Mohd Asif", "t": "VP - Sales", "d": "Sales", "l": "Delhi"}, {"n": "Gauri Shankar Gaud", "t": "VP - Sales", "d": "Sales", "l": "Delhi"}, {"n": "Pankaj Silswal", "t": "Business Development Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Giriraj Singh", "t": "Business Development Manager", "d": "Sales", "l": "Delhi"}, {"n": "Ishan Mukesh Sheode", "t": "Business Development Executive", "d": "Sales", "l": "Mumbai"}, {"n": "Nagaraju B K", "t": "Sales Head - B2B (South India)", "d": "Sales", "l": "Bengaluru"}, {"n": "Rohit S K", "t": "Business Development Executive", "d": "Sales", "l": "Kolkata"}, {"n": "Ashish Kumar", "t": "Business Development Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Dayananda C", "t": "Business Development Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Dhilak S", "t": "Business Development Executive", "d": "Sales", "l": "Chennai"}, {"n": "Sagarmal Sen", "t": "Business Development Manager", "d": "Sales", "l": "Jabalpur"}, {"n": "Satyendra Goswami", "t": "Business Development Manager", "d": "Sales", "l": "Delhi"}, {"n": "Anuj Kumar Sareen", "t": "Business Development Manager", "d": "Sales", "l": "Jabalpur"}, {"n": "Sagar B H M", "t": "Business Development Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Ankitkumar Jha Kanhayamohan", "t": "Business Development Executive", "d": "Sales", "l": "Surat"}, {"n": "Vinod Kumar", "t": "Business Development Executive", "d": "Sales", "l": "Bhopal"}, {"n": "Athul P S", "t": "Business Development Manager", "d": "Sales", "l": "kerala"}, {"n": "Dharmanand Dixit", "t": "Area Sales Manager", "d": "Sales", "l": "lucknow"}, {"n": "Rajesh Kumar", "t": "Area Sales Manager", "d": "Sales", "l": "Haryana"}, {"n": "Shipra Uttam Meshram", "t": "Key Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Thriveni .", "t": "Key Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Sowmya K P", "t": "Key Account Manager", "d": "Sales", "l": "Bengaluru"}, {"n": "Akbar Pasha", "t": "Key Account Manager", "d": "Sales", "l": "Hyderabad"}, {"n": "Rakesh Magar V", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Pruthvi R S", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Punith Kumar V", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Moksh Sharma", "t": "Account Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Ashwitha Y", "t": "B2B Support Executive", "d": "Sales", "l": "Bengaluru"}, {"n": "Noel Joseph", "t": "Business Development Executive", "d": "Sales", "l": "Kochi"}, {"n": "Mohammed Asif", "t": "Business Development Executive", "d": "Sales", "l": "Hyderabad"}, {"n": "Akshay Banodhiya", "t": "Business Development Executive", "d": "Sales", "l": "Ahmedabad"}, {"n": "Yerra Venkat Sai Vamsi Vivek", "t": "Business Development Executive", "d": "Sales", "l": "Hyderabad"}, {"n": "Ajit KANIJKUMAR Sheth", "t": "Area Sales Manager", "d": "Sales", "l": "Gujarat"}, {"n": "Gaurav Kumar Sharma", "t": "Key Account Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Divya Mathur", "t": "Key Account Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Kollipara Dinesh", "t": "Business Development Executive", "d": "Sales", "l": "Vishakhapatnam"}, {"n": "Manish Singh Rajput", "t": "Key Account Manager", "d": "Sales", "l": "Gurgaon"}, {"n": "Aman Jha", "t": "Business Development Executive", "d": "Sales", "l": "Faridabad"}, {"n": "Prashant Kalendra Manchkar", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Jayesh P Rathod", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Rohan Sham Deshpande", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Shree Vasant Deshmukh", "t": "Tour Manager", "d": "Sales", "l": "Mumbai"}, {"n": "Gogul G K", "t": "Business Development Executive", "d": "Sales", "l": "Thrissur"}, {"n": "Sourabh Nivas Kamble", "t": "Business Development Executive", "d": "Sales", "l": "Mumbai"}, {"n": "Afaq Safeer Khan", "t": "Business Development Executive", "d": "Sales", "l": "Mumbai"}, {"n": "Poornima Avinash Gunjalkar", "t": "Destination  Expert", "d": "Sales", "l": "Mumbai"}, {"n": "Vaishali Yadav", "t": "Team Lead - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Harshit Danwar", "t": "Project Management Analyst - Operations", "d": "Operations", "l": "Gurgaon"}, {"n": "Bikash Roy", "t": "Team Leader - Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Poonam Kumari Thapa", "t": "Head – Revenue and Operations", "d": "Operations", "l": "Siliguri"}, {"n": "Santosh Roy", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Sadhana Thapa", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Bidesh Chowdhury", "t": "Team Leader - Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Nilkamal Sarkar", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Alip Sengupta", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Aniket Deb", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Bhumika Roy", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Ashis Biswas", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Ramkrishna Paul", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Jayant Kumar Sinha", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Charles Rai", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Pritam Samajdar", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Subhranil Basak", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Ankita Bhakta", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Roshan Sharma", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Pratikhcha Pradhan", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Ajit Rai", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Stuti Pradhan", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Priyanjana Das", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Shashank Gurung", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Puja Biswas", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Panushree Thapa", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Maria Goretti Sitling", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Pratigya Rai", "t": "Operation Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Sushmita Majumder", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Munin Basumatary", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Sham Sunder V", "t": "Assistant Manager - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Bipul Daimari", "t": "Team Lead - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Magesh Mohanraj", "t": "Team Lead - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Pathan Mohammed P Saleem", "t": "Team Lead - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Reginold Simon", "t": "Manager- Visa Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Ronak Raju Dhanwani", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Mohammed Arif S", "t": "Manager - DMC Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Shaik Abdul Masroor", "t": "Deputy Manager - Group Desk", "d": "Operations", "l": "Bengaluru"}, {"n": "Akash Kumar", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Saranya M", "t": "SME - Payments", "d": "Operations", "l": "Bengaluru"}, {"n": "Suresh V", "t": "SME - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Sharath Kumar A", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Faisal syed mukthar Shah", "t": "Team Leader - Care", "d": "Operations", "l": "Bengaluru"}, {"n": "Bhaskar V", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Chhaya Kumari", "t": "Manager- Visa Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Asha S", "t": "Chat Support Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mohammed Nabeel Faraz", "t": "Assistant Manager - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "S Mamatha", "t": "Asst.Manager- Visa Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Nithin D", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Vigneshwaran K", "t": "Senior Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mohammed Suhail", "t": "Team Lead - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Abhishek Haldia", "t": "Visa Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Kiran N", "t": "Team Leader - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Sindhu S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Tousif Sait", "t": "Deputy Manager - Flights Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Charitha Ravi", "t": "Team Lead - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Veda K", "t": "SME", "d": "Operations", "l": "Bengaluru"}, {"n": "Shruthi N", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Ganesh Raju N", "t": "Sr Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Shashank H M", "t": "Deputy Manager - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Venkatesh Prasad N H", "t": "Team Leader - Care", "d": "Operations", "l": "Bengaluru"}, {"n": "Jaychandra H S", "t": "Assistant Manager - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Ifraq Ahmed R N", "t": "Manager - DMC Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Riddhi Dhirendra Waghela", "t": "Team Leader – FIT Europe", "d": "Operations", "l": "Mumbai"}, {"n": "Mohammed Sameerulla Khan", "t": "Team Lead - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Sagar Padmakar Joshi", "t": "Tour Manager", "d": "Operations", "l": "Mumbai"}, {"n": "Pravir Pathak", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sagar Mukherjee", "t": "Sr. Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Kavya S", "t": "Customer Support Executive - Payments", "d": "Operations", "l": "Bengaluru"}, {"n": "Anusha S", "t": "Chat Support Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mousham Kumari", "t": "Customer Support Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Luni Sewa", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Debashmita Bhattacherjee", "t": "Operation Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Harshitha R", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Kumar Babu G V", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Balachandar H Benakatti", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Abhishek Mohanta", "t": "Operation Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Ramyashree M", "t": "Operation Executive - Insurance", "d": "Operations", "l": "Bengaluru"}, {"n": "Neha U", "t": "Customer Support Executive - Payments", "d": "Operations", "l": "Bengaluru"}, {"n": "Aditi Singh", "t": "Customer Support Executive - Payments", "d": "Operations", "l": "Bengaluru"}, {"n": "Aravind P", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Madhuri A", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sai Charan M", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Smitha Shet", "t": "Customer Support Executive - Payments", "d": "Operations", "l": "Bengaluru"}, {"n": "Rakshitha Ganesh", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Rahul Kumar", "t": "Customer Support Executive - Callcenter", "d": "Operations", "l": "Bengaluru"}, {"n": "Kaushik S", "t": "Assistant Manager - Operations", "d": "Operations", "l": "Bengaluru"}, {"n": "Nithyananda S C", "t": "Sr Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sk Asif Akram", "t": "Sr. Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Thanush Reddy S B", "t": "Team Leader - Esclations", "d": "Operations", "l": "Bengaluru"}, {"n": "Ira Mukund Bhatt", "t": "Europe Customer Experience", "d": "Operations", "l": "Mumbai"}, {"n": "Bhimashankar Ravindra Kulkarni", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Lokesh C Savadatti", "t": "Operation Executive - Insurance", "d": "Operations", "l": "Bengaluru"}, {"n": "Chiranjit Boro", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Parvesh Kumari", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Kunal Ekka", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Khusboo Moktan", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "James Clement", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Rohit Sharma", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Survi Verma", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Abhishek Teron", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Navya P", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mohammed Arbaz Pasha", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Johnson K", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Chandana V", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mohini V Handewale", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Prem Kumar E", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Suhas G", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Deepika V", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Zeenath Begum", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Akhila B", "t": "Chat Support Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Patricia Denzil", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Anushree S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Bhargavi B", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mehar unnisa", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Aishwarya A", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Nisarga C S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Gifty G", "t": "Customer Support Executive - Callcenter", "d": "Operations", "l": "Bengaluru"}, {"n": "Sadhana P", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Manjula S", "t": "Customer Support Executive - Payments", "d": "Operations", "l": "Bengaluru"}, {"n": "Rashmika G", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Abhijeet Ranjan", "t": "Customer Support Executive - Esclations", "d": "Operations", "l": "Bengaluru"}, {"n": "Shivangi Vishwakarma", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sonia Yadav", "t": "Visa Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Shoaib Chand Ansari", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Annwesha Pal", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Khaleel Ur Rehman", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Ameena Iram", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Meghana M S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sajiya Hussain", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Zehra Khatoon Khan", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Sonia Mothay", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Kalyani Prasad", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Sayankan Paul", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Deeksha N S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Harish R", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Spandhana K V", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Suraj C J", "t": "Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Vijaya kumar J", "t": "Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Vaisakh P V", "t": "Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mohammed Sadath Khan", "t": "Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Saloni Tokas", "t": "Visa Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Aryan Bantawa Rai", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Chitto Broto Goswami", "t": "Operation Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Rikesh Tamang", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Chiraag Chakraborthy", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Nupur Biswas", "t": "Air Ticketing Executive", "d": "Operations", "l": "Siliguri"}, {"n": "Chandhan V K", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Rakshitha M S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Saloni U K", "t": "Customer Support Executive - Esclations", "d": "Operations", "l": "Bengaluru"}, {"n": "Rakshitha V", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Chandan P R", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Naina Premchand Kamat", "t": "Visa Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Mohammed Masood Ahmed", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Nikita Kharbanda", "t": "Visa Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Taniya Nandi", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Varsha C A", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Pradeep M", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Navya G", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "V Laxman Kumar", "t": "Operation Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Syed Mubarak", "t": "Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Tripti Bhardwaj", "t": "Operation Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Abhishek .", "t": "Sr Operation Executive", "d": "Operations", "l": "Gurgaon"}, {"n": "Harish R", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Ganesh S S", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Mohammed Faizad", "t": "Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Shekhar Santosh Patil", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Shravan Kumar Bind", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Sujanya N S", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Nagma M", "t": "Customer Support Executive - Callcenter", "d": "Operations", "l": "Bengaluru"}, {"n": "Harry Jenifer Z", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sunil M S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Darshan S", "t": "Sr. Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Koushik s", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Navya A R", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Prekha Vadhini T", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Chaithra V", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Chandana R", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mahima A", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Nandini R", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Deepika G", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Bharath Kumar D", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sandesh L", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Madan S", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Leonard Vicky", "t": "Air Ticketing Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Rakshitha R", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sanjay S", "t": "Customer Support Executive - Esclations", "d": "Operations", "l": "Bengaluru"}, {"n": "Nirag K A", "t": "Customer Support Executive - Esclations", "d": "Operations", "l": "Bengaluru"}, {"n": "Varshini N", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Mahammadhusain Saeed Bijale", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Mehul Sanjay Bhalerao", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Gnana Deepa Nadar", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Aaron Parmar", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Ananya C C", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Kavya D R", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Ramisha Antony Raj", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Hari Krishna S", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Chandrashekar M", "t": "Customer Support Executive - Delivery", "d": "Operations", "l": "Bengaluru"}, {"n": "Delita Agnelo Fernandes", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Kavya M", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Mohsina Begum", "t": "Customer Support Executive - Callcenter", "d": "Operations", "l": "Bengaluru"}, {"n": "Sanjeev Kumar Chhikara", "t": "Regional Head Visa (North & West)", "d": "Operations", "l": "Gurgaon"}, {"n": "Amir Shafi Shaikh", "t": "Tour Manager", "d": "Operations", "l": "Mumbai"}, {"n": "Puja Vivekanand Onekar", "t": "FIT Operations Head - Europe", "d": "Operations", "l": "Mumbai"}, {"n": "Anto R Abhishek", "t": "Customer Support  Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Raveesh Kumaresan Kumaresan Sumathi", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Rutika Rajendra More", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Siddhesh Shankar Kurlekar", "t": "Operation Executive", "d": "Operations", "l": "Mumbai"}, {"n": "Mahesh Kumar Lakra", "t": "Head of Embassy Relationship Officer", "d": "Operations", "l": "Gurgaon"}, {"n": "Dheena Dhayalan G", "t": "Air Ticketing  Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Dinakaran M", "t": "Air Ticketing  Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Sarjeet Khatri", "t": "Visa Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Tannishtha Ajaykumar Patil", "t": "Operation Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Veer Khandu Shinde", "t": "Operation   Executive", "d": "Operations", "l": "Bengaluru"}, {"n": "Richie", "t": "Bangalore Head- B2B", "d": "Product", "l": "Bengaluru"}, {"n": "Shriya Gupta", "t": "Supply Relationship Manager", "d": "Product", "l": "Gurgaon"}, {"n": "Ashish Yadav", "t": "VP - Product & Growth", "d": "Product", "l": "Gurgaon"}, {"n": "Shaurya Pratap Singh", "t": "Contracting Manager", "d": "Product", "l": "Gurgaon"}, {"n": "Naveen Rajesh", "t": "Assistant Manager - Product", "d": "Product", "l": "Bengaluru"}, {"n": "Varsha Thapa", "t": "Product Executive", "d": "Product", "l": "Siliguri"}, {"n": "Nandana N", "t": "Senior Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Saif Ansar Khan", "t": "Contracting & Marketing Head - UK & Europe", "d": "Product", "l": "Mumbai"}, {"n": "Diana S K", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Rajeev Gautam", "t": "Head - North Contracting", "d": "Product", "l": "Gurgaon"}, {"n": "Asha Aswathaiah", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Indramma .", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Disha Mooljee", "t": "Senior Product Manager", "d": "Product", "l": "Mumbai"}, {"n": "Shreyas N", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Suraksha Shetty", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Manisha M Jain", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Ravitej S M", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Jawahar R", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Vasumitha G", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Yuvraj V B", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Girish V", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Praveen Kumar K", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Shaikh Humera", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Siddiq K R", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Vatsal Jalla", "t": "Senior Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Lakshmi M Maraddi", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Chethana T N", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Nikitha S", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Nandhini S", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Joseph Raj A", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Sriramana S", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Sandhya Manandhar", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Sheetal V", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "M J Shakthi Pallavi", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Raghav RK", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Aishwarya T V", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Mallikarjuna T", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Nitin Kumar Madeshia", "t": "Director of Product", "d": "Product", "l": "Noida"}, {"n": "Mohsin Ahmed Batla", "t": "Director of Product", "d": "Product", "l": "Noida"}, {"n": "Bushra Shafi Sayyed", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Rahul Kumar Sharma", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Chandra Kothari", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Pallavi Jain", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Sougata Saha", "t": "Product Executive", "d": "Product", "l": "Siliguri"}, {"n": "Raghu S T", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Ashna Sunilkumar Sadhwani", "t": "Product Executive", "d": "Product", "l": "Bengaluru"}, {"n": "Vaishnavi Suraj Poul", "t": "Product Management Intern", "d": "Product", "l": "Bengaluru"}, {"n": "Kritik Purohit", "t": "Senior Operation Executive ", "d": "Product", "l": "Gurgaon"}, {"n": "Siva sanmugavel NU", "t": "Product Management Intern", "d": "Product", "l": "Bengaluru"}, {"n": "Sneha Zimolson Paul", "t": "Product Management Intern", "d": "Product", "l": "Bengaluru"}, {"n": "Anik Saha", "t": "Software Engineer", "d": "Technology", "l": "Siliguri"}, {"n": "Sirajuddin Reniman", "t": "Senior Engineering Manager", "d": "Technology", "l": "Bengaluru"}, {"n": "Dhruv Minotra", "t": "Senior Software Engineer", "d": "Technology", "l": "Delhi"}, {"n": "Atul Bhaskar", "t": "Senior Software Engineer", "d": "Technology", "l": "Delhi"}, {"n": "Abhishek Dhiman", "t": "Software Development Engineer - II", "d": "Technology", "l": "Delhi"}, {"n": "Shahid Siraj", "t": "Senior Software Engineer", "d": "Technology", "l": "Pune"}, {"n": "Amit Kumar", "t": "Software Development Engineer - II", "d": "Technology", "l": "Bihar"}, {"n": "Naman Varshney", "t": "Principle Architect", "d": "Technology", "l": "Bengaluru"}, {"n": "Mohit Anand", "t": "Software Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Abhishek Sharma", "t": "Senior Software Engineer", "d": "Technology", "l": "Uttar Pradesh"}, {"n": "Ram Krishna Garg", "t": "VP - Engineering", "d": "Technology", "l": "Delhi"}, {"n": "Deepankar Mondal", "t": "Technical Lead", "d": "Technology", "l": "Siliguri"}, {"n": "Nagarajan Thangavel", "t": "Senior Software Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Thageer Ashraf S", "t": "Sr.Product Designer", "d": "Technology", "l": "Bengaluru"}, {"n": "Shrinivas Ravindra Devarkonda", "t": "Senior Vice President - Devops and Infrastructure", "d": "Technology", "l": "Bengaluru"}, {"n": "Kshitiz Gupta", "t": "Lead Software Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Sarath R Nair", "t": "Software Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Rahul Kumar Ram", "t": "Software Engineer", "d": "Technology", "l": "Noida"}, {"n": "Deva Dharshini S", "t": "Sr.Product Designer", "d": "Technology", "l": "Bengaluru"}, {"n": "Sheersh Atrishi", "t": "Software Engineer", "d": "Technology", "l": "Noida"}, {"n": "Anika Bansal", "t": "Software Engineer", "d": "Technology", "l": "Noida"}, {"n": "Vishal Kumar K A", "t": "Sr.Product Designer", "d": "Technology", "l": "Bengaluru"}, {"n": "Hareesh Govindan", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Suraj Patil", "t": "Software Test Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Kumari Riya", "t": "Software Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Anusha S P", "t": "Senior Test Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Maguluri Yaswanth Reddy", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Dinesh R", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Aravind Induri", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Vishal Sinha", "t": "Engineering Manager", "d": "Technology", "l": "Bengaluru"}, {"n": "Alok Patel", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Sanskar Tyagi", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Mohit Viswkarma", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Prajwal B M", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Shubham Kumar Baranwal", "t": "Senior Engineering Manager", "d": "Technology", "l": "Bengaluru"}, {"n": "Aashish Manohar Varlani", "t": "Senior Software Engineer", "d": "Technology", "l": "Bengaluru"}, {"n": "Subhankar Sen", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Sachin Kushawaha", "t": "Senior Engineering Manager", "d": "Technology", "l": "Bengaluru"}, {"n": "Ansh Lakhera", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Nikhil Niranjan Wakode", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Ved Sarang Kulkarni", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Pradip Dattatray Yadav", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Cephas Gokula", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Surya Poojith Kanchu Stambham", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Shivamani G", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Kunal Agarwal", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Yuvin Raja", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Pranshu Chaurasia", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Martin Vakada", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Abhinav Karthik", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Priyanshu Upadhyay", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Chinmay Sanjay Tavarej", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Sumit Mahendra More", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Krishna Gupta", "t": "Tech- Intern", "d": "Technology", "l": "Noida"}, {"n": "Sonu Kumar Mahto", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Pawanraje Sukumar Ukarde", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Vishesh P Gowda", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Shubham Raju Wagh", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "C Siva Kumar", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Aman Santosh Jaiswal", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Ketan Bajpai", "t": "Tech- Intern", "d": "Technology", "l": "Noida"}, {"n": "Mridul Pandey", "t": "Tech- Intern", "d": "Technology", "l": "Noida"}, {"n": "OM Shandilya", "t": "Tech- Intern", "d": "Technology", "l": "Noida"}, {"n": "Deepak kumar Ojha", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Tumu Sujay Babu", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Krishna Prasad S", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "KH SRUJAN GOWDA", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "ANANDHU BIJU", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Krithik Raja M", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Ravi S", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Vighnesh M S", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Rohan A R", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "ANKUR ANAND", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Bandi Karthik", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Sravan Peddakotla", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Vedansh Srivastava", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Ishan Gupta", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Tharun J S", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Sarthak Gupta Gupta", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Vishnu Vardhan P R", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Akshat Verma", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Kushagra Sharma", "t": "Tech- Intern", "d": "Technology", "l": "Noida"}, {"n": "Priyanshu Sharma", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Arpan Biswas", "t": "AI Solution Architect", "d": "Technology", "l": "Bengaluru"}, {"n": "Devduth Surendran", "t": "Product Designer", "d": "Technology", "l": "Bengaluru"}, {"n": "Rahul S V", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Umar Farooq", "t": "Tech- Intern", "d": "Technology", "l": "Bengaluru"}, {"n": "Vishal Vishwakarma", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Mani Maha Parvas", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Harsha Vardhan Lakavath", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Arun Agnes", "t": "Software Development Engineer - I", "d": "Technology", "l": "Bengaluru"}, {"n": "Kishan Singh Shahi", "t": "Sr. Accountant", "d": "Finance", "l": "Siliguri"}, {"n": "Kartik Karjee", "t": "Branch Manager", "d": "Finance", "l": "Siliguri"}, {"n": "Rajesh Adhikari", "t": "Accounts Executive", "d": "Finance", "l": "Siliguri"}, {"n": "Pritam Roy", "t": "Accountant", "d": "Finance", "l": "Siliguri"}, {"n": "Dipanti Kumari", "t": "Accountant", "d": "Finance", "l": "Siliguri"}, {"n": "Benai Prasad", "t": "Accountant", "d": "Finance", "l": "Siliguri"}, {"n": "Ananda M", "t": "Deputy Manager - Accounts", "d": "Finance", "l": "Bengaluru"}, {"n": "Raghu N R", "t": "Senior Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Keerthi R", "t": "Deputy Manager - Accounts", "d": "Finance", "l": "Bengaluru"}, {"n": "Shashi Bansal", "t": "Assistant Finance Manager", "d": "Finance", "l": "Bengaluru"}, {"n": "Vadde Raju", "t": "Account Payables", "d": "Finance", "l": "Bengaluru"}, {"n": "Mallana Gouda", "t": "Accounts Manager", "d": "Finance", "l": "Bengaluru"}, {"n": "Sonu Chauhan", "t": "Assistant Finance Manager", "d": "Finance", "l": "Delhi"}, {"n": "Keerthan A S", "t": "Finance Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Akash Bhowmick", "t": "Accountant", "d": "Finance", "l": "Siliguri"}, {"n": "Abhilash K R", "t": "Account Manager - IATA BSP Administrator", "d": "Finance", "l": "Bengaluru"}, {"n": "Jasvinder Singh", "t": "Accounts Executive - DMC", "d": "Finance", "l": "Gurgaon"}, {"n": "Venkatesh B", "t": "Accounts Manager", "d": "Finance", "l": "Bengaluru"}, {"n": "Srikanth S", "t": "Assistant Manager - Accounts", "d": "Finance", "l": "Bengaluru"}, {"n": "Ambika M S", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Ubada Sukri", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Manoj T K", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Vadde Siva Shankar", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Sumi Chanda", "t": "Treasury Manager", "d": "Finance", "l": "Bengaluru"}, {"n": "Karan S Bhosle", "t": "Finance - Intern", "d": "Finance", "l": "Bengaluru"}, {"n": "Kaverappa N D", "t": "Finance - Intern", "d": "Finance", "l": "Bengaluru"}, {"n": "Abhilash Dinesh", "t": "Tax Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Hemsagar H Badni", "t": "Finance - Intern", "d": "Finance", "l": "Bengaluru"}, {"n": "Vicky Kumar Rana", "t": "Finance - Intern", "d": "Finance", "l": "Bengaluru"}, {"n": "Karthikeyan S", "t": "Finance - Intern", "d": "Finance", "l": "Bengaluru"}, {"n": "Arun Asokan", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Hemavathi P S", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Flavia Patrick", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Vaishnavi ,", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Chandu Udarapu", "t": "Junior MIS Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Ankush Kumar Bhadani", "t": "Accounts Manager", "d": "Finance", "l": "Bengaluru"}, {"n": "Agasthian V", "t": "Accounts Executive", "d": "Finance", "l": "Bengaluru"}, {"n": "Riddhi Ratilal Padiya", "t": "Accounts Manager", "d": "Finance", "l": "Bengaluru"}, {"n": "Abhishek Mahesh", "t": "Accounts Manager", "d": "Finance", "l": "Bengaluru"}, {"n": "Puja Roy", "t": "HR Executive", "d": "HR & Admin", "l": "Siliguri"}, {"n": "Agraharam Sriharsha Bhatt", "t": "HR Executive", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Roshan V V", "t": "Lead Talent Acquisition Specialist", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Annock Wesly S", "t": "Talent Acquisition Specialist", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Krishna Prasad B P", "t": "Asst Manager - HR Operations", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Rakesh N", "t": "Sr HR Executive", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Eswara Rao Madugula", "t": "Senior Manager - Payroll", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Pushpa M", "t": "HR Executive", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Sandhya Rani Gochhayat", "t": "HR Executive", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Shveta Sood", "t": "HR Executive", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Pritisha Parekh", "t": "HR Executive", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Sadhana Subba", "t": "Talent Acquisition Specialist", "d": "HR & Admin", "l": "Siliguri"}, {"n": "Spurthi M N", "t": "HR Executive", "d": "HR & Admin", "l": "Bengaluru"}, {"n": "Ajay Kawa", "t": "Global Business Development (BTO)", "d": "Leadership", "l": "London"}];
 var PRODUCTS=[{"name": "Maldives Liveaboard", "cat": "Water Sports", "owner": "Angad Shishodia", "stage": "pricing", "priority": "High", "updated": "Today", "notes": "Pricing review with supplier"}, {"name": "Dubai Desert Safari", "cat": "Experience", "owner": "Raj Kumar", "stage": "training", "priority": "High", "updated": "Today", "notes": "Sales training scheduled"}, {"name": "Bali Villa Collection", "cat": "Accommodation", "owner": "Ajay Kawa", "stage": "content & images", "priority": "Medium", "updated": "Yesterday", "notes": "Awaiting photographer assets"}, {"name": "Vietnam Group Tour", "cat": "Group Travel", "owner": "Asad Sidiqui", "stage": "supplier negotiation", "priority": "Medium", "updated": "2 days ago", "notes": "Initial proposal drafted"}, {"name": "Thailand MICE Package", "cat": "MICE", "owner": "Angad Shishodia", "stage": "live", "priority": "High", "updated": "Last week", "notes": "Live on website and OTAs"}, {"name": "Singapore Explorer", "cat": "City Break", "owner": "Raj Kumar", "stage": "marketing", "priority": "Low", "updated": "3 days ago", "notes": "Campaign assets ready"}, {"name": "Europe Rail Pass", "cat": "Transport", "owner": "Ajay Kawa", "stage": "loading", "priority": "Medium", "updated": "Today", "notes": "Loading on website CMS"}, {"name": "Maldives Spa Retreat", "cat": "Wellness", "owner": "Asad Sidiqui", "stage": "paused", "priority": "Low", "updated": "Last week", "notes": "On hold pending supplier rates"}];
@@ -2728,10 +3157,8 @@ function exportKPIs(){
     +rows.map(function(k){return[k.name,k.cat,k.owner,k.target,k.actual||0,kpiPct(k)+'%',k.unit,k.period,k.notes]
       .map(function(v){return'"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='kpis.csv';a.click();
-}
-
-</script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+}</script>
+  
   
     <!-- ══ MARKETING REQUEST ══ -->
     <div class="page" id="pg-mkt-request">
@@ -3211,442 +3638,7 @@ function exportKPIs(){
             <div class="dk-row c2">
               <div class="dk-ff"><label>Period / Deadl
 
-<script>
-// ── Firebase init — waits for SDK then connects ────────────
-var db = null;
-var FB_CONFIG = {
-  apiKey: "AIzaSyCJXOlSMyFlrcnQ2air1h1dbhFqLxXzOdI",
-  authDomain: "orn-wiki.firebaseapp.com",
-  databaseURL: "https://orn-wiki-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "orn-wiki",
-  storageBucket: "orn-wiki.firebasestorage.app",
-  messagingSenderId: "25736842668",
-  appId: "1:25736842668:web:754f9cf6268e2a5552fe09"
-};
-function initFirebase() {
-  try {
-    if (typeof firebase !== 'undefined' && firebase.app) {
-      // Already initialised (HMR safe)
-    } else if (typeof firebase !== 'undefined') {
-      firebase.initializeApp(FB_CONFIG);
-    } else {
-      // SDK not ready yet — retry in 200ms
-      setTimeout(initFirebase, 200);
-      return;
-    }
-    db = firebase.database();
-    console.log('✅ Firebase connected — orn-wiki');
-    // Re-wire listeners now db is ready
-    if (typeof wireExistingFB === 'function') wireExistingFB();
-  } catch(e) {
-    if (e.code === 'app/duplicate-app') {
-      db = firebase.database();
-      console.log('✅ Firebase reconnected');
-      if (typeof wireExistingFB === 'function') wireExistingFB();
-    } else {
-      console.warn('Firebase init error:', e.message);
-    }
-  }
-}
-initFirebase();
 
-function fbSet(path,data,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).set(data,function(err){if(cb)cb(err);});}
-function fbPush(path,data,cb){if(!db){if(cb)cb('offline',null);return;}var r=db.ref(path).push(data,function(err){if(cb)cb(err,r?r.key:null);});}
-function fbRemove(path,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).remove(function(err){if(cb)cb(err);});}
-function fbOn(path,cb){if(!db){setTimeout(function(){fbOn(path,cb);},300);return;}db.ref(path).on('value',function(s){cb(s.val());});}
-function fbOnce(path,cb){if(!db){setTimeout(function(){fbOnce(path,cb);},300);return;}db.ref(path).once('value',function(s){cb(s.val());});}
-
-
-function fbSet(path,data,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).set(data,function(err){if(cb)cb(err);});}
-function fbPush(path,data,cb){if(!db){if(cb)cb('offline',null);return;}var r=db.ref(path).push(data,function(err){if(cb)cb(err,r?r.key:null);});}
-function fbRemove(path,cb){if(!db){if(cb)cb('offline');return;}db.ref(path).remove(function(err){if(cb)cb(err);});}
-function fbOn(path,cb){if(!db){setTimeout(function(){fbOn(path,cb);},300);return;}db.ref(path).on('value',function(s){cb(s.val());});}
-function fbOnce(path,cb){if(!db){setTimeout(function(){fbOnce(path,cb);},300);return;}db.ref(path).once('value',function(s){cb(s.val());});}
-
-
-
-
-// ── Seed destination cards so page is never blank ────────
-var SEED_DESTS = [
-  {name:'Maldives',region:'Indian Ocean',status:'Active – Selling Well',color:'#00a8e8',
-   season:'Nov–Apr (dry season)',flight:'~10–11h from London',
-   visa:'UK: Visa on Arrival 30 days free. India: Visa on Arrival USD $50.',
-   hotels:'Kandima, Sun Siyam Iru Fushi, Angsana Velavaru, Atmosphere Kanifushi, Cinnamon Hakuraa, Meeru Island',
-   usp:'World-class snorkelling & diving. Private overwater villas. All-inclusive options. No mass tourism feel.',
-   tips:'Upsell to water villa. Check seaplane vs speedboat transfer cost. Best value Nov & May shoulder seasons.',
-   by:'System',date:'Pre-loaded'},
-  {name:'Dubai & UAE',region:'Middle East / UAE',status:'Active – Selling Well',color:'#f5c518',
-   season:'Oct–Apr (cool & dry)',flight:'~7h from London',
-   visa:'UK: Visa on Arrival 30 days free. India: Visa required — apply 3–4 weeks in advance.',
-   hotels:'Atlantis The Palm, Waldorf Astoria Palm, Jumeirah Al Qasr, Address Downtown, Fairmont The Palm, Burj Al Arab',
-   usp:'Iconic skyline. Desert & beach in one trip. World-class shopping. Family attractions. Strong India market.',
-   tips:'Crisis window Apr 2025 — rates 40-60% off. Great time to sell. Combine with Abu Dhabi day trip.',
-   by:'System',date:'Pre-loaded'},
-  {name:'Thailand',region:'SE Asia',status:'Active – Selling Well',color:'#3bb54a',
-   season:'Nov–Apr (cool & dry). Phuket all year.',flight:'~11–12h from London',
-   visa:'UK: Visa exemption 30 days. India: Visa on Arrival available.',
-   hotels:'Anantara Layan, Trisara, Rosewood Phuket, Capella Bangkok, Mandarin Oriental Bangkok',
-   usp:'Luxury at value prices. Beach, culture & food in one destination. Strong from India market.',
-   tips:'Phuket best Nov–Mar. Bangkok short breaks work well. Upsell island hopping packages.',
-   by:'System',date:'Pre-loaded'},
-  {name:'Bali, Indonesia',region:'SE Asia',status:'Active – Selling Well',color:'#e03a2f',
-   season:'Apr–Oct (dry). Avoid Dec–Feb monsoon.',flight:'~15–16h from London (via SIN/KUL)',
-   visa:'UK: Visa on Arrival 30 days. India: Visa on Arrival USD $35.',
-   hotels:'Four Seasons Sayan, Viceroy Bali, COMO Uma Ubud, Alila Villas Uluwatu, Potato Head Beach Club',
-   usp:'Spiritual & wellness destination. Rice terraces. World-class surf. Unique culture. Photography hotspot.',
-   tips:'Combine South Bali (beach) + Ubud (culture). Honeymooners love it. Strong Instagram appeal.',
-   by:'System',date:'Pre-loaded'},
-  {name:'Sri Lanka',region:'Indian Subcontinent',status:'Active – Building',color:'#9b59b6',
-   season:'Dec–Mar West Coast. Apr–Sep East Coast.',flight:'~10–11h from London',
-   visa:'UK & India: ETA required online — USD $20, quick to get.',
-   hotels:'Amanwella, Resplendent Ceylon properties, Cape Weligama, Fortress Resort, Shangri-La Colombo',
-   usp:'Affordable luxury. Tea plantations, wildlife, beaches, cultural triangle. Emerging destination.',
-   tips:'Best sold as a circuit — Colombo, Cultural Triangle, Hill Country, Beach. Train journey is iconic.',
-   by:'System',date:'Pre-loaded'},
-  {name:'Singapore',region:'SE Asia',status:'Active – Selling Well',color:'#e67e22',
-   season:'Year-round. Feb–Apr driest.',flight:'~13h from London',
-   visa:'UK: Visa free 30 days. India: Visa required.',
-   hotels:'Marina Bay Sands, Raffles Singapore, Capella Singapore, Andaz Singapore, Pan Pacific',
-   usp:'Gateway to Asia. Family & luxury. Food capital. Universal Studios. Clean & safe.',
-   tips:'Works as stopover with Bali or Thailand. F1 Grand Prix in Sep. Strong from India — visa is key objection.',
-   by:'System',date:'Pre-loaded'},
-];
-function initSeedDestinations(){
-  if(!db) return;
-  fbOnce(FB_ROOT+'/destinations', function(val){
-    if(val && Object.keys(val).length > 0) return; // already has data
-    SEED_DESTS.forEach(function(d){
-      d.id = 'seed_'+d.name.replace(/[^a-z]/gi,'_').toLowerCase();
-      fbPush(FB_ROOT+'/destinations', d);
-    });
-    console.log('✅ Seed destinations loaded');
-  });
-}
-
-// ── Calculator ready check ──────────────────────────────
-function calcReady(){
-  return !!document.getElementById('r-hotel-total');
-}
-var _origRunCalc = window.runCalc;
-window.runCalc = function(){
-  if(!calcReady()){return;}
-  if(_origRunCalc) _origRunCalc();
-};
-
-// ── Marketing request: show immediately, load async ──────
-var _origRenderMktList = window.renderMktList;
-window.renderMktList = function(){
-  var el = document.getElementById('mr-list');
-  var cnt = document.getElementById('mr-count');
-  if(!el) return;
-  if(!db){
-    el.innerHTML = '<div style="font-size:.78rem;color:rgba(255,255,255,.4);padding:12px 0">Connecting to database...</div>';
-    setTimeout(function(){if(window.renderMktList) window.renderMktList();}, 1000);
-    return;
-  }
-  if(_origRenderMktList) _origRenderMktList();
-};
-
-// Call seed after Firebase ready
-var _origWireExisting = window.wireExistingFB;
-window.wireExistingFB = function(){
-  if(_origWireExisting) _origWireExisting();
-  setTimeout(initSeedDestinations, 2000);
-  setTimeout(initSeedSuppliers, 3000);
-};
-
-var SEED_SUPPLIERS = [
-  {
-    "name": "The Bristol Hotel Dubai (formerly JW Marriott Hote",
-    "contact": "Sarah Al-Rasheed",
-    "role": "Director of Sales",
-    "email": "sarah.alrasheed@thehotels.com",
-    "phone": "+66 58 513 3704",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Dubai, UAE",
-    "status": "Active Contract",
-    "notes": "ADR \u00a354 | 4516 room nights booked | Source: Direct | Revenue \u00a3220,137",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Yas Plaza Mangroves",
-    "contact": "Michael Chen",
-    "role": "Revenue Manager",
-    "email": "michael.chen@yashotels.com",
-    "phone": "+971 95 616 7894",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Abu Dhabi, UAE",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3236 | 163 room nights booked | Source: API | Revenue \u00a340,326",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Novotel Singapore on Kitchener",
-    "contact": "Priya Sharma",
-    "role": "GSA Representative",
-    "email": "priya.sharma@novotelhotels.com",
-    "phone": "+44 92 962 3651",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Singapore, Singapore",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3205 | 765 room nights booked | Source: API | Revenue \u00a3165,222",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Bangkok Palace Hotel",
-    "contact": "Ahmed Hassan",
-    "role": "National Sales Manager",
-    "email": "ahmed.hassan@bangkokhotels.com",
-    "phone": "+62 54 221 7053",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Bangkok, Thailand",
-    "status": "In Negotiation",
-    "notes": "ADR \u00a353 | 4291 room nights booked | Source: API | Revenue \u00a3156,142",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Fishermen's Harbour Urban Resort",
-    "contact": "Emma Thompson",
-    "role": "Area Director of Sales",
-    "email": "emma.thompson@fishermen'shotels.com",
-    "phone": "+39 56 255 1869",
-    "pref": "Phone",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Phuket, Thailand",
-    "status": "In Negotiation",
-    "notes": "ADR \u00a388 | 1783 room nights booked | Source: API | Revenue \u00a3129,865",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Visesa Ubud Resort",
-    "contact": "Raj Patel",
-    "role": "Key Account Manager",
-    "email": "raj.patel@visesahotels.com",
-    "phone": "+62 68 705 8775",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Bali, Indonesia",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3174 | 226 room nights booked | Source: API | Revenue \u00a343,831",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Radisson Hotel & Conference Centre London Heathrow",
-    "contact": "Maria Santos",
-    "role": "Director of Sales",
-    "email": "maria.santos@radissonhotels.com",
-    "phone": "+66 73 493 5741",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "London, UK",
-    "status": "To Contact",
-    "notes": "ADR \u00a3134 | 174 room nights booked | Source: Direct | Revenue \u00a321,925",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "DoubleTree by Hilton Paris Bougival",
-    "contact": "David Kim",
-    "role": "Revenue Manager",
-    "email": "david.kim@doubletreehotels.com",
-    "phone": "+66 55 428 8439",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Paris, France",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3121 | 583 room nights booked | Source: Direct | Revenue \u00a377,051",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Radisson Hotel & Suites Amsterdam South",
-    "contact": "Fatima Al-Zahra",
-    "role": "GSA Representative",
-    "email": "fatima.alzahra@radissonhotels.com",
-    "phone": "+33 64 737 1269",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Amsterdam, Netherlands",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3139 | 394 room nights booked | Source: Direct | Revenue \u00a351,501",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Hampton By Hilton Rome North Fiano Romano",
-    "contact": "James Mitchell",
-    "role": "National Sales Manager",
-    "email": "james.mitchell@hamptonhotels.com",
-    "phone": "+33 60 594 1281",
-    "pref": "Phone",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Rome, Italy",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3137 | 191 room nights booked | Source: Direct | Revenue \u00a326,938",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "DoubleTree by Hilton Tokyo Ariake",
-    "contact": "Ananya Krishnan",
-    "role": "Area Director of Sales",
-    "email": "ananya.krishnan@doubletreehotels.com",
-    "phone": "+44 75 221 3791",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Tokyo, Japan",
-    "status": "In Negotiation",
-    "notes": "ADR \u00a3365 | 156 room nights booked | Source: Direct | Revenue \u00a373,936",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "InterContinental Sydney by IHG",
-    "contact": "Carlos Rivera",
-    "role": "Key Account Manager",
-    "email": "carlos.rivera@intercontinentalhotels.com",
-    "phone": "+27 79 501 7184",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Sydney, Australia",
-    "status": "In Negotiation",
-    "notes": "ADR \u00a3384 | 228 room nights booked | Source: API | Revenue \u00a397,090",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Fairway Colombo - Sri Lanka's First Hotel With Rob",
-    "contact": "Sophie Dubois",
-    "role": "Director of Sales",
-    "email": "sophie.dubois@fairwayhotels.com",
-    "phone": "+971 76 654 1977",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Colombo, Sri Lanka",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3135 | 110 room nights booked | Source: Direct | Revenue \u00a312,676",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Cresta Grande Cape Town",
-    "contact": "Omar Abdullah",
-    "role": "Revenue Manager",
-    "email": "omar.abdullah@crestahotels.com",
-    "phone": "+33 93 659 3749",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Cape Town, South Africa",
-    "status": "To Contact",
-    "notes": "ADR \u00a3130 | 108 room nights booked | Source: API | Revenue \u00a313,887",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Medhufushi Island Resort",
-    "contact": "Lisa Wong",
-    "role": "Director of Sales",
-    "email": "lisa.wong@medhufushotels.com",
-    "phone": "+852 858 1175",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Maldives",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3417 | 150 room nights | Source: Direct | Key market property",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Grand Barcelona Hotel",
-    "contact": "Arjun Mehta",
-    "role": "Revenue Manager",
-    "email": "arjun.mehta@grandhotels.com",
-    "phone": "+43 973 6016",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Barcelona, Spain",
-    "status": "In Negotiation",
-    "notes": "ADR \u00a3180 | 500 room nights | Source: Direct | Key market property",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Grand Mumbai Hotel",
-    "contact": "Nina Petrov",
-    "role": "GSA Representative",
-    "email": "nina.petrov@grandhotels.com",
-    "phone": "+960 385 7878",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Mumbai, India",
-    "status": "To Contact",
-    "notes": "ADR \u00a3180 | 500 room nights | Source: Direct | Key market property",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Furama Bukit Bintang",
-    "contact": "Hassan Ibrahim",
-    "role": "National Sales Manager",
-    "email": "hassan.ibrahim@furamahotels.com",
-    "phone": "+34 989 1136",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Kuala Lumpur, Malaysia",
-    "status": "Active Contract",
-    "notes": "ADR \u00a349 | 1972 room nights | Source: API | Key market property",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Holiday Inn Golden Mile, an IHG Hotel",
-    "contact": "Chloe Martin",
-    "role": "Area Director of Sales",
-    "email": "chloe.martin@holidayhotels.com",
-    "phone": "+60 700 1733",
-    "pref": "WhatsApp",
-    "cat": "Hotel \u2013 Luxury",
-    "region": "Hong Kong, China",
-    "status": "Active Contract",
-    "notes": "ADR \u00a3248 | 116 room nights | Source: API | Key market property",
-    "by": "System",
-    "date": "Pre-loaded"
-  },
-  {
-    "name": "Grand Vienna Hotel",
-    "contact": "Vikram Nair",
-    "role": "Key Account Manager",
-    "email": "vikram.nair@grandhotels.com",
-    "phone": "+91 779 5609",
-    "pref": "Email",
-    "cat": "Hotel \u2013 Upscale",
-    "region": "Vienna, Austria",
-    "status": "In Negotiation",
-    "notes": "ADR \u00a3180 | 500 room nights | Source: Direct | Key market property",
-    "by": "System",
-    "date": "Pre-loaded"
-  }
-];
-
-function initSeedSuppliers(){
-  if(!db) return;
-  fbOnce(FB_ROOT+'/suppliers', function(val){
-    if(val && Object.keys(val).length > 0) return;
-    SEED_SUPPLIERS.forEach(function(s){ fbPush(FB_ROOT+'/suppliers', s); });
-    console.log('✅ Seed suppliers loaded — '+SEED_SUPPLIERS.length+' contacts');
-  });
-}
-</script>
 
 
 <style>
