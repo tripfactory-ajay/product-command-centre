@@ -1343,7 +1343,36 @@ body{max-width:none!important;margin:0!important;width:100%!important}
   </div>
 </div>
 
-<script>// ── Firebase init — waits for SDK then connects ────────────
+<script>
+// Inject light-theme CSS for internal pages via JS (avoids document.write conflicts)
+(function(){
+  var css = [
+    '#pg-suppliers,#pg-calculator,#pg-regional,#pg-files,#pg-escalations,#pg-destinations,#pg-kpis,#pg-mkt-request,#pg-new-product,#pg-marketing,#pg-team,#pg-org-chart,#pg-cam,#pg-cam-tracker,#pg-api-status,#pg-uae-internal{background:#f0f2f7!important;color:#1a2744!important}',
+    '#pg-suppliers .dk-scroll,#pg-calculator .dk-scroll,#pg-escalations .dk-scroll,#pg-destinations .dk-scroll,#pg-kpis .dk-scroll,#pg-mkt-request .dk-scroll,#pg-regional .scroll,#pg-files .scroll,#pg-new-product .scroll,#pg-marketing .scroll,#pg-team .scroll,#pg-org-chart .scroll,#pg-cam .scroll,#pg-cam-tracker .scroll,#pg-api-status .scroll,#pg-uae-internal .scroll{background:#f0f2f7!important}',
+    '.dk-sec{background:#fff!important;border-color:#dde2ef!important}',
+    '.dk-sec-hd{color:#0d1b3e!important}',
+    '.dk-inp,.dk-sel,.dk-ta{background:#fff!important;color:#1a2744!important;border-color:#dde2ef!important}',
+    '.dk-btn{background:#fff!important;color:#1a2744!important;border-color:#dde2ef!important}',
+    '.dk-btn.accent{background:linear-gradient(135deg,#00a8e8,#0077bb)!important;color:#fff!important;border-color:transparent!important}',
+    '.dk-twrap{background:#fff!important}',
+    '.dk-twrap td{color:#1a2744!important}',
+    '.dk-twrap tr:hover td{background:#f8fafc!important}',
+    '.calc-box{background:#fff!important;border-color:#dde2ef!important}',
+    '.calc-v{color:#0d1b3e!important}',
+    '.calc-l{color:#6b7a99!important}',
+    '.phd h2{color:#0d1b3e!important}',
+    '.phd p{color:#6b7a99!important}',
+    '.back-btn{background:#fff!important;color:#6b7a99!important;border-color:#dde2ef!important}',
+    '#pg-suppliers td,#pg-calculator td,#pg-regional td{color:#1a2744!important}',
+    '#pg-suppliers th,#pg-regional th{background:#0d1b3e!important;color:#fff!important}',
+    '#main{background:#f0f2f7!important}'
+  ].join('');
+  var st=document.createElement('style');
+  st.id='orn-internal-theme';
+  st.textContent=css;
+  document.head.appendChild(st);
+})();
+// ── Firebase init — waits for SDK then connects ────────────
 var db = null;
 var FB_CONFIG = {
   apiKey: "AIzaSyCJXOlSMyFlrcnQ2air1h1dbhFqLxXzOdI",
@@ -1462,7 +1491,7 @@ window.renderMktList = function(){
   var cnt = document.getElementById('mr-count');
   if(!el) return;
   if(!db){
-    el.innerHTML = '<div style="font-size:.78rem;color:#6b7a99;padding:12px 0">Connecting to database...</div>';
+    el.innerHTML = '<div style="font-size:.78rem;color:rgba(255,255,255,.4);padding:12px 0">Connecting to database...</div>';
     setTimeout(function(){if(window.renderMktList) window.renderMktList();}, 1000);
     return;
   }
@@ -2351,22 +2380,19 @@ function postRegionalUpdate(){
   var u={from:from,
     dept:(document.getElementById('rg-dept')||{}).value||'Commercial',
     region:(document.getElementById('rg-region')||{}).value||'Global',
-    subject:subj,
-    notes:(document.getElementById('rg-notes')||{}).value||'',
+    subject:subj,notes:(document.getElementById('rg-notes')||{}).value||'',
     actions:(document.getElementById('rg-actions')||{}).value||'',
     priority:(document.getElementById('rg-priority')||{}).value||'normal',
     actionRequired:!!(document.getElementById('rg-action-required')&&document.getElementById('rg-action-required').checked),
-    done:false, date:new Date().toLocaleString(), id:Date.now()};
+    done:false,date:new Date().toLocaleString(),id:Date.now()};
   REGIONAL_UPDATES.unshift(u);
   renderRegional();
   updateAllCounts();
-  if(db&&typeof fbPush==='function') fbPush(FB_ROOT+'/regional_updates',u);
-  ['rg-from','rg-subject','rg-notes','rg-actions'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.value='';});
+  if(db&&typeof fbPush==='function')fbPush(FB_ROOT+'/regional_updates',u);
+  ['rg-from','rg-subject','rg-notes','rg-actions'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var pri=document.getElementById('rg-priority');if(pri)pri.value='normal';
   var ar=document.getElementById('rg-action-required');if(ar)ar.checked=false;
-  var form=document.getElementById('regional-form-card');
-  if(form)form.style.display='none';
+  var form=document.getElementById('regional-form-card');if(form)form.style.display='none';
   alert('Update posted!');
 }
 function renderRegional(){
@@ -2385,7 +2411,7 @@ function renderRegional(){
   var cnt=document.getElementById('rg-count');
   if(cnt)cnt.textContent=updates.length+' update'+(updates.length===1?'':'s');
   if(!updates.length){
-    el.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7a99">No updates yet. Click + Post Update to add one.</td></tr>';
+    el.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7a99">No updates yet. Click + Post Update.</td></tr>';
     return;
   }
   var out='';
@@ -2393,13 +2419,13 @@ function renderRegional(){
     var pcl=priCls[u.priority||'normal']||'s-norm';
     out+='<tr>';
     out+='<td style="font-size:.72rem;color:#6b7a99;white-space:nowrap">'+esc(u.date||'')+'</td>';
-    out+='<td><strong>'+esc(u.from||'')+'</strong></td>';
+    out+='<td><strong style="color:#0d1b3e">'+esc(u.from||'')+'</strong></td>';
     out+='<td><span style="font-size:.68rem;background:#f0f2f7;padding:2px 7px;border-radius:10px;color:#374151">'+esc(u.dept||'')+'</span></td>';
     out+='<td><span style="font-size:.68rem;background:#eff6ff;padding:2px 7px;border-radius:10px;color:#2563eb">'+esc(u.region||'')+'</span></td>';
-    out+='<td><strong>'+esc(u.subject||'')+'</strong>'+(u.notes?'<br><small style="color:#6b7a99">'+esc(u.notes.slice(0,80))+'</small>':'')+'</td>';
+    out+='<td style="color:#0d1b3e"><strong>'+esc(u.subject||'')+'</strong>'+(u.notes?'<br><small style="color:#6b7a99">'+esc(u.notes.slice(0,80))+'</small>':'')+'</td>';
     out+='<td style="font-size:.72rem;color:#374151">'+esc((u.actions||'').slice(0,80))+'</td>';
-    out+='<td><span class="dk-badge '+pcl+'">'+esc(u.priority||'normal')+'</span>'+(u.actionRequired?' <span class="dk-badge s-crit">Action</span>':'')+'</td>';
-    out+='<td><button class="dk-btn-sm" onclick="toggleRgDone(this.dataset.id)" data-id="'+u.id+'">'+( u.done?'Reopen':'Done')+'</button></td>';
+    out+='<td><span class="dk-badge '+pcl+'">'+esc(u.priority||'normal')+'</span></td>';
+    out+='<td><button class="dk-btn-sm" onclick="toggleRgDone(this.dataset.id)" data-id="'+u.id+'">'+(u.done?'Reopen':'Done')+'</button></td>';
     out+='</tr>';
   });
   el.innerHTML=out;
@@ -2668,7 +2694,7 @@ function renderMktList(){
     var cnt=document.getElementById('mr-count');
     if(!val){
       if(cnt)cnt.textContent='0 requests';
-      el.innerHTML='<div style="font-size:.78rem;color:#9ba7c0;padding:12px 0">No requests yet — fill the form above, it auto-saves as you type</div>';
+      el.innerHTML='<div style="font-size:.78rem;color:rgba(255,255,255,.3);padding:12px 0">No requests yet — fill the form above, it auto-saves as you type</div>';
       return;
     }
     var items=Object.keys(val).map(function(k){var v=val[k];v._key=k;return v;}).reverse();
@@ -2805,13 +2831,13 @@ function renderSuppliers(){
     var s=SC_DATA[k];
     var cls=stCls[s.status||'']||'';
     out+='<tr>';
-    out+='<td><strong>'+esc(s.name)+'</strong></td>';
-    out+='<td>'+esc(s.contact)+'<br><small style="color:#6b7a99">'+esc(s.role)+'</small></td>';
-    out+='<td><a href="mailto:'+esc(s.email)+'" style="color:#2563eb">'+esc(s.email)+'</a></td>';
-    out+='<td>'+esc(s.phone)+'</td>';
-    out+='<td style="font-size:.72rem">'+esc(s.cat)+'</td>';
-    out+='<td>'+esc(s.region)+'</td>';
-    out+='<td><span class="dk-badge '+cls+'">'+esc(s.status)+'</span></td>';
+    out+='<td><strong style="color:#0d1b3e">'+esc(s.name)+'</strong></td>';
+    out+='<td style="color:#1a2744">'+esc(s.contact)+'<br><small style="color:#6b7a99">'+esc(s.role)+'</small></td>';
+    out+='<td><a href="mailto:'+esc(s.email)+'" style="color:#00a8e8">'+esc(s.email)+'</a></td>';
+    out+='<td style="color:#1a2744">'+esc(s.phone)+'</td>';
+    out+='<td style="font-size:.72rem;color:#374151">'+esc(s.cat)+'</td>';
+    out+='<td style="color:#1a2744">'+esc(s.region)+'</td>';
+    out+='<td><span class="dk-badge '+cls+'" style="color:inherit">'+esc(s.status)+'</span></td>';
     out+='<td style="font-size:.72rem;color:#6b7a99">'+esc((s.notes||'').slice(0,80))+'</td>';
     out+='<td style="font-size:.7rem;color:#9ba7c0">'+esc(s.by||'')+'</td>';
     out+='<td><button class="dk-btn-sm" onclick="editSupplier(this.dataset.id)" data-id="'+k+'">Edit</button> ';
@@ -2854,17 +2880,11 @@ function runCalc(){
   var netPct=sellTotal>0?Math.round(net/sellTotal*100):0;
   function fmt(n){return cur+' '+Math.round(n).toLocaleString();}
   function fmtINR(n){return '₹'+Math.round(n).toLocaleString('en-IN');}
-  sf('r-hotel-total',fmt(hotelTotal));
-  sf('r-flights-total',fmt(flightsTotal));
-  sf('r-extras-total',fmt(extrasTotal));
-  sf('r-cost-total',fmt(totalCost));
-  sf('r-cost-pp',fmt(costPP));
-  sf('r-sell-pp',fmt(sellPP));
-  sf('r-gross',fmt(gross));
-  sf('r-net',fmt(net));
-  sf('r-margin-pct',netPct+'%');
-  var inrEl=document.getElementById('r-inr-pp');
-  if(inrEl)inrEl.textContent=fmtINR(sellPP*toINR);
+  sf('r-hotel-total',fmt(hotelTotal));sf('r-flights-total',fmt(flightsTotal));
+  sf('r-extras-total',fmt(extrasTotal));sf('r-cost-total',fmt(totalCost));
+  sf('r-cost-pp',fmt(costPP));sf('r-sell-pp',fmt(sellPP));
+  sf('r-gross',fmt(gross));sf('r-net',fmt(net));sf('r-margin-pct',netPct+'%');
+  var inrEl=document.getElementById('r-inr-pp');if(inrEl)inrEl.textContent=fmtINR(sellPP*toINR);
   var noteEl=document.getElementById('r-inr-note');
   if(noteEl){var dest=gv('calc-dest');noteEl.textContent=(dest?dest+' · ':'')+pax+' pax · '+nights+' nights · 1 '+cur+'=₹'+toINR;}
   sf('r-inr-total',fmtINR(sellTotal*toINR));
@@ -2903,13 +2923,13 @@ function deleteScenario(key){
 function renderScenarios(){
   var el=document.getElementById('calc-scenarios');if(!el)return;
   var keys=Object.keys(SCENARIOS);
-  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:#9ba7c0">No saved scenarios yet</div>';return;}
+  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:rgba(255,255,255,.3)">No saved scenarios yet</div>';return;}
   el.innerHTML=keys.reverse().map(function(k){
     var s=SCENARIOS[k];
     return '<div class="calc-scenario">'
       +'<div><strong style="color:#fff">'+esc(s.name)+'</strong>'
-      +' <span style="color:#6b7a99;font-size:.72rem">'+s.nights+'n · '+s.pax+'pax · Sell: '+esc(s.sell)+'</span>'
-      +' <span style="color:#9ba7c0;font-size:.68rem;margin-left:8px">'+esc(s.by)+' · '+esc(s.date)+'</span></div>'
+      +' <span style="color:rgba(255,255,255,.4);font-size:.72rem">'+s.nights+'n · '+s.pax+'pax · Sell: '+esc(s.sell)+'</span>'
+      +' <span style="color:rgba(255,255,255,.3);font-size:.68rem;margin-left:8px">'+esc(s.by)+' · '+esc(s.date)+'</span></div>'
       +'<div style="display:flex;gap:6px">'
       +'<button class="dk-btn-sm" onclick="loadScenario(\''+k+'\')">Load</button>'
       +'<button class="dk-del" onclick="deleteScenario(\''+k+'\')">✕</button>'
@@ -2975,7 +2995,7 @@ function renderEscalations(){
     return(!q||(e.ref+e.hotel+e.desc).toLowerCase().includes(q.toLowerCase()))
       &&(!pf||e.priority===pf)&&(!sf||e.status===sf);
   }).reverse();
-  if(!keys.length){el.innerHTML='<tr><td colspan="12" style="text-align:center;color:#9ba7c0;padding:16px">No issues logged — click + Log Issue</td></tr>';return;}
+  if(!keys.length){el.innerHTML='<tr><td colspan="12" style="text-align:center;color:rgba(255,255,255,.3);padding:16px">No issues logged — click + Log Issue</td></tr>';return;}
   var pc={Critical:'s-crit',High:'s-high',Normal:'s-norm'};
   var sc={Open:'s-open','In Progress':'s-prog',Resolved:'s-done'};
   el.innerHTML=keys.map(function(k){
@@ -2992,8 +3012,8 @@ function renderEscalations(){
         +'<option'+(e.status==='In Progress'?' selected':'')+'>In Progress</option>'
         +'<option'+(e.status==='Resolved'?' selected':'')+'>Resolved</option>'
       +'</select></td>'
-      +'<td style="font-size:.7rem;color:#9ba7c0;white-space:nowrap">'+esc(e.date)+'</td>'
-      +'<td style="font-size:.7rem;color:#9ba7c0">'+esc(e.by)+'</td>'
+      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3);white-space:nowrap">'+esc(e.date)+'</td>'
+      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3)">'+esc(e.by)+'</td>'
       +'<td style="white-space:nowrap"><button class="dk-btn-sm" onclick="editEscalation(\''+k+'\')">✏</button> <button class="dk-del" onclick="deleteEscalation(\''+k+'\')">✕</button></td>'
       +'</tr>';
   }).join('');
@@ -3074,7 +3094,7 @@ function renderDestinations(){
     var d=DEST_DATA[k];
     return(!q||d.name.toLowerCase().includes(q.toLowerCase()))&&(!rf||d.region===rf);
   });
-  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:#9ba7c0">No destination cards yet — click + Add Destination</div>';return;}
+  if(!keys.length){el.innerHTML='<div style="font-size:.78rem;color:rgba(255,255,255,.3)">No destination cards yet — click + Add Destination</div>';return;}
   var stMap={'Active – Selling Well':'s-active','Active – Building':'s-prog','Seasonal':'s-hold','Under Review':'s-open'};
   el.innerHTML=keys.map(function(k){
     var d=DEST_DATA[k];
@@ -3090,7 +3110,7 @@ function renderDestinations(){
       +'<div class="dest-actions">'
       +'<button class="dk-btn-sm" onclick="editDestination(\''+k+'\')">✏ Edit</button>'
       +'<button class="dk-del" onclick="deleteDestination(\''+k+'\')">✕ Delete</button>'
-      +'<span style="flex:1"></span><span style="font-size:.65rem;color:#9ba7c0">'+esc(d.by)+'</span>'
+      +'<span style="flex:1"></span><span style="font-size:.65rem;color:rgba(255,255,255,.3)">'+esc(d.by)+'</span>'
       +'</div></div>';
   }).join('');
 }
@@ -3158,7 +3178,7 @@ function fmtKPI(k,val){
 function renderKPIs(){
   var el=document.getElementById('kpi-tbody');if(!el)return;
   var keys=Object.keys(KPI_DATA);
-  if(!keys.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:#9ba7c0;padding:16px">No KPIs set — click + Add KPI</td></tr>';return;}
+  if(!keys.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:16px">No KPIs set — click + Add KPI</td></tr>';return;}
   el.innerHTML=keys.reverse().map(function(key){
     var k=KPI_DATA[key];
     var pct=kpiPct(k);
@@ -3169,9 +3189,9 @@ function renderKPIs(){
       +'<td style="font-weight:700;color:#00a8e8">'+fmtKPI(k,k.target)+'</td>'
       +'<td><input class="dk-inp" type="number" value="'+(k.actual||0)+'" style="width:100px;padding:4px 8px;font-size:.75rem" onchange="updateKPIActual(\''+key+'\',this.value)"></td>'
       +'<td>'+kpiBar(pct)+'</td>'
-      +'<td style="font-size:.73rem;color:#6b7a99">'+esc(k.period)+'</td>'
-      +'<td style="font-size:.73rem;color:#6b7a99;max-width:120px">'+esc(k.notes)+'</td>'
-      +'<td style="font-size:.7rem;color:#9ba7c0">'+esc(k.by)+'</td>'
+      +'<td style="font-size:.73rem;color:rgba(255,255,255,.5)">'+esc(k.period)+'</td>'
+      +'<td style="font-size:.73rem;color:rgba(255,255,255,.5);max-width:120px">'+esc(k.notes)+'</td>'
+      +'<td style="font-size:.7rem;color:rgba(255,255,255,.3)">'+esc(k.by)+'</td>'
       +'<td style="white-space:nowrap"><button class="dk-btn-sm" onclick="editKPI(\''+key+'\')">✏</button> <button class="dk-del" onclick="deleteKPI(\''+key+'\')">✕</button></td>'
       +'</tr>';
   }).join('');
@@ -3373,131 +3393,128 @@ function exportKPIs(){
     </div>
 
     <!-- ══ RATE & MARGIN CALCULATOR ══ -->
-    <div class="page" id="pg-calculator">
-      <div class="dk-scroll">
-        <div class="phd">
-          <div><button class="back-btn" onclick="showPage('home')">← Command Centre</button>
-            <h2>🧮 Rate & Margin Calculator</h2>
-            <p>Build a package — get the selling price in INR</p></div>
-          <button class="dk-btn" onclick="resetCalc()">Reset</button>
-        </div>
-        <div class="dk-sec"><div class="dk-sec-hd">🌍 Step 1 — Destination & Package</div>
-          <div class="dk-row c3">
-            <div class="dk-ff"><label>Destination</label>
-              <select id="calc-dest" class="dk-sel" onchange="runCalc()">
-                <option value="">— Select —</option>
-                <optgroup label="Indian Ocean"><option>Maldives</option><option>Sri Lanka</option><option>Mauritius</option><option>Seychelles</option></optgroup>
-                <optgroup label="Middle East"><option>Dubai, UAE</option><option>Abu Dhabi</option><option>Qatar</option><option>Oman</option></optgroup>
-                <optgroup label="SE Asia"><option>Thailand</option><option>Bali</option><option>Singapore</option><option>Malaysia</option><option>Vietnam</option><option>Philippines</option></optgroup>
-                <optgroup label="East Asia"><option>Japan</option><option>Hong Kong</option><option>South Korea</option></optgroup>
-                <optgroup label="Europe"><option>UK</option><option>France</option><option>Italy</option><option>Spain</option><option>Switzerland</option><option>Greece</option><option>Turkey</option></optgroup>
-                <optgroup label="Africa"><option>South Africa</option><option>Kenya / Safari</option><option>Egypt</option><option>Morocco</option></optgroup>
-                <optgroup label="Americas"><option>USA</option><option>Canada</option><option>Mexico</option></optgroup>
-                <optgroup label="India"><option>Goa</option><option>Kerala</option><option>Rajasthan</option><option>Himachal Pradesh</option><option>Andaman Islands</option></optgroup>
-              </select></div>
-            <div class="dk-ff"><label>Cost Currency</label>
-              <select id="calc-currency" class="dk-sel" onchange="runCalc()">
-                <option value="USD">USD $</option><option value="GBP">GBP £</option>
-                <option value="EUR">EUR €</option><option value="AED">AED</option>
-                <option value="SGD">SGD</option><option value="THB">THB</option><option value="INR">INR ₹</option>
-              </select></div>
-            <div class="dk-ff"><label>No. of Pax</label>
-              <input id="calc-pax" class="dk-inp" type="number" value="2" min="1" oninput="runCalc()"></div>
-          </div>
-        </div>
-        <div class="dk-sec"><div class="dk-sec-hd">🏨 Step 2 — Hotel</div>
-          <div class="dk-row c3">
-            <div class="dk-ff"><label>Hotel Name</label><input id="calc-hotel-name" class="dk-inp" placeholder="e.g. Atlantis The Palm"></div>
-            <div class="dk-ff"><label>Category</label>
-              <select id="calc-hotel-cat" class="dk-sel">
-                <option>5★ Luxury</option><option>5★ Deluxe</option><option>4★ Superior</option>
-                <option>3★ Standard</option><option>Resort / All-Inclusive</option><option>Private Villa</option><option>Overwater Bungalow</option>
-              </select></div>
-            <div class="dk-ff"><label>Room Type</label>
-              <select id="calc-room-type" class="dk-sel">
-                <option>Standard Room</option><option>Superior Room</option><option>Suite</option><option>Pool Villa</option><option>Overwater Villa</option>
-              </select></div>
-          </div>
-          <div class="dk-row c3">
-            <div class="dk-ff"><label>Net Rate / Room / Night</label><input id="calc-hotel-rate" class="dk-inp" type="number" placeholder="0.00" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Nights</label><input id="calc-nights" class="dk-inp" type="number" value="7" min="1" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Rooms</label><input id="calc-rooms" class="dk-inp" type="number" value="1" min="1" oninput="runCalc()"></div>
-          </div>
-          <div class="dk-row c2">
-            <div class="dk-ff"><label>Meal Plan</label>
-              <select id="calc-meal" class="dk-sel">
-                <option>Room Only</option><option>Bed & Breakfast</option><option>Half Board</option><option>Full Board</option><option>All Inclusive</option>
-              </select></div>
-            <div class="dk-ff"><label>Meal Supplement (extra per person/night)</label><input id="calc-meal-supp" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
-          </div>
-        </div>
-        <div class="dk-sec"><div class="dk-sec-hd">✈️ Step 3 — Flights</div>
-          <div class="dk-row c3">
-            <div class="dk-ff"><label>Flight Cost Per Person (Return)</label><input id="calc-flights" class="dk-inp" type="number" placeholder="0.00" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Class</label>
-              <select id="calc-flight-class" class="dk-sel">
-                <option>Economy</option><option>Premium Economy</option><option>Business Class</option><option>First Class</option>
-              </select></div>
-            <div class="dk-ff"><label>Airport Taxes / Fees (per person)</label><input id="calc-taxes" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
-          </div>
-        </div>
-        <div class="dk-sec"><div class="dk-sec-hd">🎯 Step 4 — Activities & Extras</div>
-          <div class="dk-row c3">
-            <div class="dk-ff"><label>Transfers (total)</label><input id="calc-transfers" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Activities / Excursions (total)</label><input id="calc-activities" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Visa / Insurance (per person)</label><input id="calc-visa" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
-          </div>
-          <div class="dk-row c2">
-            <div class="dk-ff"><label>Tour Guide (total)</label><input id="calc-guide" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Miscellaneous (total)</label><input id="calc-misc" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
-          </div>
-        </div>
-        <div class="dk-sec"><div class="dk-sec-hd">📈 Step 5 — Margin & Exchange Rates</div>
-          <div class="dk-row c3">
-            <div class="dk-ff"><label>Target Gross Margin %</label><input id="calc-margin" class="dk-inp" type="number" value="20" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Agent Commission %</label><input id="calc-comm" class="dk-inp" type="number" value="10" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>Sales Channel</label>
-              <select id="calc-channel" class="dk-sel">
-                <option>Direct</option><option>Travel Agent</option><option>OTA</option><option>Corporate</option>
-              </select></div>
-          </div>
-          <div class="dk-row c3">
-            <div class="dk-ff"><label>1 USD = ₹</label><input id="calc-usd-inr" class="dk-inp" type="number" value="84" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>1 GBP = ₹</label><input id="calc-gbp-inr" class="dk-inp" type="number" value="107" oninput="runCalc()"></div>
-            <div class="dk-ff"><label>1 EUR = ₹</label><input id="calc-eur-inr" class="dk-inp" type="number" value="91" oninput="runCalc()"></div>
-          </div>
-        </div>
-        <div class="dk-sec" style="border:2px solid #00a8e8;background:#f0f8ff">
-          <div class="dk-sec-hd" style="color:#0077bb;border-color:#bfdbfe">📊 Results</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
-            <div class="calc-box"><div class="calc-v" id="r-hotel-total">—</div><div class="calc-l">Hotel Total</div></div>
-            <div class="calc-box"><div class="calc-v" id="r-flights-total">—</div><div class="calc-l">Flights Total</div></div>
-            <div class="calc-box"><div class="calc-v" id="r-extras-total">—</div><div class="calc-l">Extras</div></div>
-            <div class="calc-box"><div class="calc-v" id="r-cost-total">—</div><div class="calc-l">Total Net Cost</div></div>
-            <div class="calc-box"><div class="calc-v" id="r-cost-pp">—</div><div class="calc-l">Cost Per Person</div></div>
-            <div class="calc-box" style="background:#eff6ff;border-color:#bfdbfe"><div class="calc-v" id="r-sell-pp" style="color:#2563eb">—</div><div class="calc-l">Sell Price pp</div></div>
-          </div>
-          <div style="background:linear-gradient(135deg,#0d1b3e,#1a3a6b);border-radius:12px;padding:20px 24px;text-align:center;margin-bottom:16px">
-            <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">SELLING PRICE IN INR — PER PERSON</div>
-            <div id="r-inr-pp" style="font-size:2.4rem;font-weight:900;color:#fff">₹ —</div>
-            <div id="r-inr-note" style="font-size:.75rem;color:rgba(255,255,255,.5);margin-top:6px">Fill in costs above</div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-            <div class="calc-box" style="background:#f0fdf4;border-color:#86efac"><div class="calc-v" id="r-gross" style="color:#16a34a">—</div><div class="calc-l">Gross Margin</div></div>
-            <div class="calc-box" style="background:#f0fdf4;border-color:#86efac"><div class="calc-v" id="r-net" style="color:#16a34a">—</div><div class="calc-l">Net After Comm</div></div>
-            <div class="calc-box" style="background:#f0fdf4;border-color:#86efac"><div class="calc-v" id="r-margin-pct" style="color:#16a34a">—</div><div class="calc-l">Net Margin %</div></div>
-            <div class="calc-box" style="background:#fff8f8;border-color:#fca5a5"><div class="calc-v" id="r-inr-total" style="color:#dc2626">—</div><div class="calc-l">Total ₹</div></div>
-          </div>
-        </div>
-        <div class="dk-sec">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div class="dk-sec-hd" style="margin:0">📁 Saved Scenarios</div>
-            <button class="dk-btn accent" onclick="saveScenario()">💾 Save</button>
-          </div>
-          <div id="calc-scenarios"><div style="font-size:.78rem;color:#9ba7c0">No saved scenarios yet</div></div>
+    <div class="page" id="pg-calculator"><div class="dk-scroll">
+      <div class="phd">
+        <div><button class="back-btn" onclick="showPage('home')">← Command Centre</button>
+          <h2>🧮 Rate & Margin Calculator</h2><p>Build a package — selling price in INR</p></div>
+        <button class="dk-btn" onclick="resetCalc()">Reset</button>
+      </div>
+      <div class="dk-sec"><div class="dk-sec-hd">🌍 Step 1 — Destination & Package</div>
+        <div class="dk-row c3">
+          <div class="dk-ff"><label>Destination</label>
+            <select id="calc-dest" class="dk-sel" onchange="runCalc()">
+              <option value="">— Select —</option>
+              <optgroup label="Indian Ocean"><option>Maldives</option><option>Sri Lanka</option><option>Mauritius</option><option>Seychelles</option></optgroup>
+              <optgroup label="Middle East"><option>Dubai, UAE</option><option>Abu Dhabi</option><option>Qatar</option><option>Oman</option></optgroup>
+              <optgroup label="SE Asia"><option>Thailand</option><option>Bali</option><option>Singapore</option><option>Malaysia</option><option>Vietnam</option><option>Philippines</option></optgroup>
+              <optgroup label="East Asia"><option>Japan</option><option>Hong Kong</option><option>South Korea</option></optgroup>
+              <optgroup label="Europe"><option>UK</option><option>France</option><option>Italy</option><option>Spain</option><option>Switzerland</option><option>Greece</option><option>Turkey</option></optgroup>
+              <optgroup label="Africa"><option>South Africa</option><option>Kenya / Safari</option><option>Egypt</option><option>Morocco</option></optgroup>
+              <optgroup label="Americas"><option>USA</option><option>Canada</option><option>Mexico</option></optgroup>
+              <optgroup label="India"><option>Goa</option><option>Kerala</option><option>Rajasthan</option><option>Himachal Pradesh</option><option>Andaman Islands</option></optgroup>
+            </select></div>
+          <div class="dk-ff"><label>Cost Currency</label>
+            <select id="calc-currency" class="dk-sel" onchange="runCalc()">
+              <option value="USD">USD $</option><option value="GBP">GBP £</option>
+              <option value="EUR">EUR €</option><option value="AED">AED</option>
+              <option value="SGD">SGD</option><option value="THB">THB</option><option value="INR">INR ₹</option>
+            </select></div>
+          <div class="dk-ff"><label>No. of Pax</label>
+            <input id="calc-pax" class="dk-inp" type="number" value="2" min="1" oninput="runCalc()"></div>
         </div>
       </div>
-    </div>
+      <div class="dk-sec"><div class="dk-sec-hd">🏨 Step 2 — Hotel</div>
+        <div class="dk-row c3">
+          <div class="dk-ff"><label>Hotel Name</label><input id="calc-hotel-name" class="dk-inp" placeholder="e.g. Atlantis The Palm"></div>
+          <div class="dk-ff"><label>Category</label>
+            <select id="calc-hotel-cat" class="dk-sel">
+              <option>5★ Luxury</option><option>5★ Deluxe</option><option>4★ Superior</option>
+              <option>3★ Standard</option><option>Resort / All-Inclusive</option><option>Private Villa</option><option>Overwater Bungalow</option>
+            </select></div>
+          <div class="dk-ff"><label>Room Type</label>
+            <select id="calc-room-type" class="dk-sel">
+              <option>Standard Room</option><option>Superior Room</option><option>Suite</option><option>Pool Villa</option><option>Overwater Villa</option>
+            </select></div>
+        </div>
+        <div class="dk-row c3">
+          <div class="dk-ff"><label>Net Rate / Room / Night</label><input id="calc-hotel-rate" class="dk-inp" type="number" placeholder="0.00" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Nights</label><input id="calc-nights" class="dk-inp" type="number" value="7" min="1" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Rooms</label><input id="calc-rooms" class="dk-inp" type="number" value="1" min="1" oninput="runCalc()"></div>
+        </div>
+        <div class="dk-row c2">
+          <div class="dk-ff"><label>Meal Plan</label>
+            <select id="calc-meal" class="dk-sel">
+              <option>Room Only</option><option>Bed & Breakfast</option><option>Half Board</option><option>Full Board</option><option>All Inclusive</option>
+            </select></div>
+          <div class="dk-ff"><label>Meal Supplement (per person/night extra)</label><input id="calc-meal-supp" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
+        </div>
+      </div>
+      <div class="dk-sec"><div class="dk-sec-hd">✈️ Step 3 — Flights</div>
+        <div class="dk-row c3">
+          <div class="dk-ff"><label>Flight Cost Per Person (Return)</label><input id="calc-flights" class="dk-inp" type="number" placeholder="0.00" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Class</label>
+            <select id="calc-flight-class" class="dk-sel">
+              <option>Economy</option><option>Premium Economy</option><option>Business Class</option><option>First Class</option>
+            </select></div>
+          <div class="dk-ff"><label>Airport Taxes / Fees (per person)</label><input id="calc-taxes" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
+        </div>
+      </div>
+      <div class="dk-sec"><div class="dk-sec-hd">🎯 Step 4 — Activities & Extras</div>
+        <div class="dk-row c3">
+          <div class="dk-ff"><label>Transfers (total)</label><input id="calc-transfers" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Activities / Excursions (total)</label><input id="calc-activities" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Visa / Insurance (per person)</label><input id="calc-visa" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
+        </div>
+        <div class="dk-row c2">
+          <div class="dk-ff"><label>Tour Guide (total)</label><input id="calc-guide" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Miscellaneous (total)</label><input id="calc-misc" class="dk-inp" type="number" value="0" oninput="runCalc()"></div>
+        </div>
+      </div>
+      <div class="dk-sec"><div class="dk-sec-hd">📈 Step 5 — Margin & Exchange Rates</div>
+        <div class="dk-row c3">
+          <div class="dk-ff"><label>Target Gross Margin %</label><input id="calc-margin" class="dk-inp" type="number" value="20" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Agent Commission %</label><input id="calc-comm" class="dk-inp" type="number" value="10" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>Sales Channel</label>
+            <select id="calc-channel" class="dk-sel">
+              <option>Direct</option><option>Travel Agent</option><option>OTA</option><option>Corporate</option>
+            </select></div>
+        </div>
+        <div class="dk-row c3">
+          <div class="dk-ff"><label>1 USD = ₹</label><input id="calc-usd-inr" class="dk-inp" type="number" value="84" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>1 GBP = ₹</label><input id="calc-gbp-inr" class="dk-inp" type="number" value="107" oninput="runCalc()"></div>
+          <div class="dk-ff"><label>1 EUR = ₹</label><input id="calc-eur-inr" class="dk-inp" type="number" value="91" oninput="runCalc()"></div>
+        </div>
+      </div>
+      <div class="dk-sec" style="border:2px solid #00a8e8;background:#f0f8ff">
+        <div class="dk-sec-hd" style="color:#0077bb;border-color:#bfdbfe">📊 Results</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+          <div class="calc-box"><div class="calc-v" id="r-hotel-total">—</div><div class="calc-l">Hotel Total</div></div>
+          <div class="calc-box"><div class="calc-v" id="r-flights-total">—</div><div class="calc-l">Flights Total</div></div>
+          <div class="calc-box"><div class="calc-v" id="r-extras-total">—</div><div class="calc-l">Extras</div></div>
+          <div class="calc-box"><div class="calc-v" id="r-cost-total">—</div><div class="calc-l">Total Net Cost</div></div>
+          <div class="calc-box"><div class="calc-v" id="r-cost-pp">—</div><div class="calc-l">Cost Per Person</div></div>
+          <div class="calc-box" style="background:#eff6ff;border-color:#bfdbfe"><div class="calc-v" id="r-sell-pp" style="color:#2563eb">—</div><div class="calc-l">Sell Price pp</div></div>
+        </div>
+        <div style="background:linear-gradient(135deg,#0d1b3e,#1a3a6b);border-radius:12px;padding:20px 24px;text-align:center;margin-bottom:14px">
+          <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">SELLING PRICE IN INR — PER PERSON</div>
+          <div id="r-inr-pp" style="font-size:2.4rem;font-weight:900;color:#fff">₹ —</div>
+          <div id="r-inr-note" style="font-size:.73rem;color:rgba(255,255,255,.5);margin-top:5px">Fill in costs above to calculate</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div class="calc-box" style="background:#f0fdf4;border-color:#86efac"><div class="calc-v" id="r-gross" style="color:#16a34a">—</div><div class="calc-l">Gross Margin</div></div>
+          <div class="calc-box" style="background:#f0fdf4;border-color:#86efac"><div class="calc-v" id="r-net" style="color:#16a34a">—</div><div class="calc-l">Net After Comm</div></div>
+          <div class="calc-box" style="background:#f0fdf4;border-color:#86efac"><div class="calc-v" id="r-margin-pct" style="color:#16a34a">—</div><div class="calc-l">Net Margin %</div></div>
+          <div class="calc-box" style="background:#fff8f8;border-color:#fca5a5"><div class="calc-v" id="r-inr-total" style="color:#dc2626">—</div><div class="calc-l">Total ₹</div></div>
+        </div>
+      </div>
+      <div class="dk-sec">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="dk-sec-hd" style="margin:0">📁 Saved Scenarios</div>
+          <button class="dk-btn accent" onclick="saveScenario()">💾 Save</button>
+        </div>
+        <div id="calc-scenarios"><div style="font-size:.78rem;color:#9ba7c0">No saved scenarios yet</div></div>
+      </div>
+    </div></div>
 
     <!-- ══ ESCALATIONS ══ -->
     <div class="page" id="pg-escalations">
@@ -3770,5 +3787,8 @@ select option{background:#fff!important;color:#1a2744!important}
 /* Topbar stays black */
 .topbar{background:#000!important}
 </style>
+
+
+
 </body>
 </html>
