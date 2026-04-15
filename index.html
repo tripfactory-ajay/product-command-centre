@@ -1343,7 +1343,33 @@ body{max-width:none!important;margin:0!important;width:100%!important}
   </div>
 </div>
 
-<script>// ── Firebase init — waits for SDK then connects ────────────
+<script>
+// ── DIAGNOSTIC — run window.ornDiag() in console to test ──
+window.ornDiag = function(){
+  console.log('=== ORN HUB DIAGNOSTIC ===');
+  console.log('db:', db ? '✅ connected' : '❌ null');
+  console.log('CU (current user):', CU ? CU.name : '❌ not logged in');
+  console.log('SEED_SUPPLIERS:', typeof SEED_SUPPLIERS !== 'undefined' ? SEED_SUPPLIERS.length+' records' : '❌ undefined');
+  console.log('SC_DATA keys:', Object.keys(SC_DATA||{}).length);
+  if(db){
+    db.ref('hub/suppliers').once('value').then(function(s){
+      console.log('Firebase /hub/suppliers:', s.val() ? Object.keys(s.val()).length+' records' : 'EMPTY or BLOCKED');
+    }).catch(function(e){
+      console.error('Firebase read BLOCKED:', e.message, '— Check database rules!');
+    });
+    db.ref('hub/test_write').set({t: Date.now()}).then(function(){
+      console.log('Firebase WRITE: ✅ working');
+      db.ref('hub/test_write').remove();
+    }).catch(function(e){
+      console.error('Firebase WRITE BLOCKED:', e.message, '— Rules need: ".write": true');
+    });
+  }
+};
+// Auto-run after 3 seconds
+setTimeout(function(){
+  if(typeof CU !== 'undefined' && CU) window.ornDiag();
+}, 3000);
+// ── Firebase init — waits for SDK then connects ────────────
 var db = null;
 var FB_CONFIG = {
   apiKey: "AIzaSyCJXOlSMyFlrcnQ2air1h1dbhFqLxXzOdI",
@@ -2708,12 +2734,31 @@ function _renderMktPDF(f){
 // ══ SUPPLIER CONTACTS ══════════════════════════════════════
 var SC_DATA={};
 function listenSuppliers(){
-  fbOn(FB_ROOT+'/suppliers', function(val){
-    SC_DATA=val||{};
+  // Show seed data immediately from localStorage while Firebase loads
+  try{
+    var cached=localStorage.getItem('orn_sc_data');
+    if(cached){SC_DATA=JSON.parse(cached);}
+    else if(typeof SEED_SUPPLIERS!=='undefined'&&SEED_SUPPLIERS.length){
+      SEED_SUPPLIERS.forEach(function(s,i){SC_DATA['seed_'+i]=s;});
+      localStorage.setItem('orn_sc_data',JSON.stringify(SC_DATA));
+    }
     renderSuppliers();
-    var el=document.getElementById('sc-count');
-    if(el)el.textContent=Object.keys(SC_DATA).length+' contact'+(Object.keys(SC_DATA).length===1?'':'s');
-  });
+  }catch(e){}
+  // Also listen to Firebase for real-time updates
+  if(db){
+    fbOn(FB_ROOT+'/suppliers', function(val){
+      if(val && Object.keys(val).length > 0){
+        SC_DATA=val;
+        try{localStorage.setItem('orn_sc_data',JSON.stringify(SC_DATA));}catch(e){}
+        renderSuppliers();
+        var el=document.getElementById('sc-count');
+        if(el)el.textContent=Object.keys(SC_DATA).length+' contact'+(Object.keys(SC_DATA).length===1?'':'s');
+      } else if(!val && typeof SEED_SUPPLIERS!=='undefined'){
+        // Firebase empty - seed it
+        SEED_SUPPLIERS.forEach(function(s){fbPush(FB_ROOT+'/suppliers',s);});
+      }
+    });
+  }
 }
 function openSupplierForm(){
   sv('sc-edit-id','');
@@ -2762,7 +2807,7 @@ function renderSuppliers(){
     return(!q||(s.name+s.contact+s.region+s.notes).toLowerCase().includes(q.toLowerCase()))
       &&(!cf||s.cat===cf)&&(!sf||s.status===sf);
   });
-  if(!rows.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:16px">No contacts yet</td></tr>';return;}
+  if(!rows.length){el.innerHTML='<tr><td colspan="10" style="text-align:center;color:#9ba7c0;padding:20px;font-size:.82rem">No supplier contacts yet — click <strong>+ Add Contact</strong> to add one, or wait for seed data to load from Firebase.</td></tr>';return;}
   el.innerHTML=rows.map(function(k){
     var s=SC_DATA[k];
     return '<tr>'
